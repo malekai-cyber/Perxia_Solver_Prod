@@ -46,24 +46,19 @@ class BlobStorageService:
     def upload_pdf(
         self, 
         pdf_bytes: bytes, 
-        work_item_id: int, 
-        report_type: str = "analysis"
+        blob_name: str
     ) -> Optional[str]:
         """
         Sube un PDF al Blob Storage
         
         Args:
             pdf_bytes: Contenido del PDF en bytes
-            work_item_id: ID del Work Item
-            report_type: Tipo de reporte (analysis, executive, technical)
+            blob_name: Nombre/ruta del blob (ej: "opportunity-analysis/123/20240204.pdf")
             
         Returns:
             URL pública del PDF o None si falla
         """
         try:
-            # Generar nombre único
-            timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-            blob_name = f"work-item-{work_item_id}/{report_type}_{timestamp}.pdf"
             
             logging.info(f"📤 Subiendo PDF: {blob_name}")
             
