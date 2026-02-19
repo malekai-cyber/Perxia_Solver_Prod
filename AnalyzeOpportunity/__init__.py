@@ -165,7 +165,21 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
         result = await orchestrator.process_opportunity(opportunity_data)
 
         # Determinar código de respuesta
-        status_code = 200 if result.get("success", False) else 500
+        # Evitar reintentos automáticos desde Power Automate/consumidores externos
+        # cuando el fallo es por falta de configuración de servicios (no es un error transitorio).
+        error_code = None
+        if isinstance(result, dict) and result.get("error"):
+            error_code = result.get("error", {}).get("code")
+
+        if result.get("success", False):
+            status_code = 200
+        elif error_code == "SERVICE_NOT_CONFIGURED":
+            # Devolver 200 con detalle de error para evitar reintentos automáticos
+            status_code = 200
+            # marcar explícitamente que no se recomiendan reintentos
+            result.setdefault("retry_suggested", False)
+        else:
+            status_code = 500
 
         logging.info("=" * 60)
         if result.get("success"):

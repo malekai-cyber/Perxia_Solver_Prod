@@ -33,9 +33,30 @@ class OpportunityOrchestrator:
 
     def __init__(self):
         """Inicializa los servicios necesarios"""
-        self.openai_service = OpenAIService()
-        self.search_service = SearchService()
-        self.blob_service = BlobStorageService()
+        # Inicializar servicios con manejo de errores para entornos sin APP SETTINGS
+        try:
+            self.openai_service = OpenAIService()
+            self.openai_enabled = True
+        except Exception as e:
+            logging.warning(f"⚠️ OpenAIService no inicializado: {str(e)}")
+            self.openai_service = None
+            self.openai_enabled = False
+
+        try:
+            self.search_service = SearchService()
+            self.search_enabled = True
+        except Exception as e:
+            logging.warning(f"⚠️ SearchService no inicializado: {str(e)}")
+            self.search_service = None
+            self.search_enabled = False
+
+        try:
+            self.blob_service = BlobStorageService()
+            self.blob_enabled = True
+        except Exception as e:
+            logging.warning(f"⚠️ BlobStorageService no inicializado: {str(e)}")
+            self.blob_service = None
+            self.blob_enabled = False
 
         # Cosmos DB es opcional
         try:
@@ -92,14 +113,26 @@ class OpportunityOrchestrator:
             # ========================================
             logging.info("🔍 Paso 3: Buscando equipos relevantes...")
 
-            # Usar la descripción limpia como query de búsqueda
-            search_query = opportunity.clean_description[:500] if opportunity.clean_description else opportunity.name
-
-            teams = self.search_service.search_teams(search_query, top=15)
+            # Validar que el servicio de búsqueda esté disponible
+            if not getattr(self, "search_service", None):
+                logging.warning("⚠️ SearchService no configurado: no se podrán obtener equipos desde Azure Search")
+                teams = []
+            else:
+                # Usar la descripción limpia como query de búsqueda
+                search_query = opportunity.clean_description[:500] if opportunity.clean_description else opportunity.name
+                teams = self.search_service.search_teams(search_query, top=15)
 
             if not teams:
-                logging.warning("⚠️ No se encontraron equipos, obteniendo todos...")
-                teams = self.search_service.get_all_teams()
+                logging.warning("⚠️ No se encontraron equipos")
+                if getattr(self, "search_service", None):
+                    logging.info("📥 Obteniendo todos los equipos desde SearchService...")
+                    try:
+                        teams = self.search_service.get_all_teams()
+                    except Exception as e:
+                        logging.warning(f"⚠️ Error obteniendo todos los equipos: {str(e)}")
+                        teams = []
+                else:
+                    logging.warning("⚠️ SearchService no disponible, se continuará con lista de equipos vacía")
 
             logging.info(f"✅ {len(teams)} equipos encontrados")
 
@@ -107,6 +140,16 @@ class OpportunityOrchestrator:
             # PASO 4: Análisis con IA
             # ========================================
             logging.info("🧠 Paso 4: Analizando con DeepSeek-R1...")
+
+            # Verificar OpenAI configurado
+            if not getattr(self, "openai_service", None):
+                logging.error("❌ OpenAIService no configurado: verifique las APP SETTINGS de la Function (AZURE_OPENAI_*)")
+                return self._error_response(
+                    "SERVICE_NOT_CONFIGURED",
+                    "OpenAI/Azure OpenAI no está configurado en el entorno. Configure AZURE_OPENAI_ENDPOINT y AZURE_OPENAI_KEY en las App Settings.",
+                    opportunity.opportunityid,
+                    opportunity.name
+                )
 
             analysis_result = self.openai_service.analyze_opportunity(
                 opportunity_text=analysis_text,
@@ -169,7 +212,6 @@ class OpportunityOrchestrator:
             # PASO 7: Generar PDF
             # ========================================
             logging.info("📄 Paso 7: Generando PDF...")
-
             pdf_url = None
             try:
                 pdf_generator = PDFGenerator()
@@ -183,11 +225,14 @@ class OpportunityOrchestrator:
                     }
                 )
 
-                # Subir a Blob Storage
-                ts = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
-                blob_name = f"opportunity-analysis/{opportunity.opportunityid}/{ts}.pdf"
-                pdf_url = self.blob_service.upload_pdf(pdf_bytes, blob_name)
-                logging.info(f"✅ PDF subido: {blob_name}")
+                # Subir a Blob Storage si está disponible
+                if getattr(self, "blob_service", None):
+                    ts = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+                    blob_name = f"opportunity-analysis/{opportunity.opportunityid}/{ts}.pdf"
+                    pdf_url = self.blob_service.upload_pdf(pdf_bytes, blob_name)
+                    logging.info(f"✅ PDF subido: {blob_name}")
+                else:
+                    logging.warning("⚠️ BlobStorageService no configurado: se omitirá subida del PDF")
 
             except Exception as e:
                 logging.warning(f"⚠️ Error generando PDF: {str(e)}")
