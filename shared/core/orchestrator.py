@@ -119,7 +119,8 @@ class OpportunityOrchestrator:
                 teams = []
             else:
                 # Usar la descripción limpia como query de búsqueda
-                search_query = opportunity.clean_description[:500] if opportunity.clean_description else opportunity.name
+                desc = opportunity.clean_description
+                search_query = desc[:500] if desc else opportunity.name
                 teams = self.search_service.search_teams(search_query, top=15)
 
             if not teams:
@@ -143,10 +144,14 @@ class OpportunityOrchestrator:
 
             # Verificar OpenAI configurado
             if not getattr(self, "openai_service", None):
-                logging.error("❌ OpenAIService no configurado: verifique las APP SETTINGS de la Function (AZURE_OPENAI_*)")
+                logging.error(
+                    "❌ OpenAIService no configurado: "
+                    "verifique las APP SETTINGS de la Function (AZURE_OPENAI_*)"
+                )
                 return self._error_response(
                     "SERVICE_NOT_CONFIGURED",
-                    "OpenAI/Azure OpenAI no está configurado en el entorno. Configure AZURE_OPENAI_ENDPOINT y AZURE_OPENAI_KEY en las App Settings.",
+                    "OpenAI/Azure OpenAI no está configurado. "
+                    "Configure AZURE_OPENAI_ENDPOINT y AZURE_OPENAI_KEY en las App Settings.",
                     opportunity.opportunityid,
                     opportunity.name
                 )

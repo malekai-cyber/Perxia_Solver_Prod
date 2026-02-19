@@ -6,7 +6,8 @@ import json
 os.environ.pop('AZURE_OPENAI_KEY', None)
 os.environ.pop('AZURE_OPENAI_ENDPOINT', None)
 
-from shared.core.orchestrator import OpportunityOrchestrator
+from shared.core.orchestrator import OpportunityOrchestrator  # noqa: E402
+
 
 async def main():
     o = OpportunityOrchestrator()
