@@ -50,3 +50,7 @@ Thumbs.db
 # Environment variables
 .env
 .env.local
+
+# Test/dev artifacts
+.pytest_cache/
+index_creation.log

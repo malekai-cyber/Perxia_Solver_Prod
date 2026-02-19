@@ -16,10 +16,10 @@ from .analysis import (
 __all__ = [
     # Opportunity
     'OpportunityPayload',
-    
+
     # Analysis
     'TeamRecommendation',
-    'RiskAssessment', 
+    'RiskAssessment',
     'BudgetEstimate',
     'TimelinePhase',
     'OpportunityAnalysis',

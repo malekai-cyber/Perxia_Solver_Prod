@@ -1,47 +1,36 @@
 """
-🎨 Generador de Adaptive Cards para Oportunidades - Diseño Profesional
-Compatible con Microsoft Teams
+🎨 Generador de Adaptive Cards para Oportunidades
+Diseño Corporativo Responsive - Compatible con Teams Desktop y Mobile
 """
 
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from datetime import datetime
 
 
-def _get_risk_icon(risk_level: str) -> str:
-    """Retorna el icono apropiado según el nivel de riesgo"""
+def _get_risk_color(risk_level: str) -> str:
+    """Retorna el color según el nivel de riesgo"""
     risk_level = (risk_level or "").lower()
     if risk_level in ['alto', 'high', 'crítico', 'critical']:
-        return "🔴"
+        return "Attention"
     elif risk_level in ['medio', 'medium', 'moderado', 'moderate']:
-        return "🟡"
+        return "Warning"
     else:
-        return "🟢"
+        return "Good"
 
 
-def _get_tower_icon(tower: str) -> str:
-    """Retorna el icono apropiado para cada torre organizacional"""
-    tower_lower = (tower or "").lower()
-    icons = {
-        'fullstack': '💻', 'full-stack': '💻', 'full stack': '💻',
-        'data': '📊', 'analytics': '📈', 'bi': '📉',
-        'ciberseguridad': '🔒', 'cybersecurity': '🔒', 'security': '🔐',
-        'ia': '🤖', 'ai': '🤖', 'ml': '🧠',
-        'rpa': '⚙️', 'automation': '🔄',
-        'cloud': '☁️', 'devops': '🚀',
-        'mobile': '📱', 'qa': '✅', 'testing': '🧪',
-        'sap': '📦', 'integracion': '🔗', 'integration': '🔗',
-        'portales': '🌐', 'soporte': '🛠️', 'mantenimiento': '🔧',
-        'pmo': '📋', 'management': '📋'
-    }
-    
-    for key, icon in icons.items():
-        if key in tower_lower:
-            return icon
-    return '🏢'
+def _get_risk_badge(risk_level: str) -> str:
+    """Retorna badge de riesgo"""
+    risk_level = (risk_level or "").lower()
+    if risk_level in ['alto', 'high', 'crítico', 'critical']:
+        return "🔴 ALTO"
+    elif risk_level in ['medio', 'medium', 'moderado', 'moderate']:
+        return "🟡 MEDIO"
+    else:
+        return "🟢 BAJO"
 
 
-def _truncate_text(text: str, max_length: int = 500) -> str:
+def _truncate_text(text: str, max_length: int = 300) -> str:
     """Trunca texto de forma segura"""
     if not text:
         return ""
@@ -51,6 +40,172 @@ def _truncate_text(text: str, max_length: int = 500) -> str:
     return text
 
 
+def _create_team_card(team: Dict, index: int) -> Dict:
+    """Crea una tarjeta visual para un equipo recomendado con líder y justificación"""
+    if not isinstance(team, dict):
+        return None
+
+    team_name = team.get("team_name", "Equipo")
+    tower = team.get("tower", "")
+    score = team.get("relevance_score", 0)
+    score_pct = int(score * 100) if isinstance(score, (int, float)) else 0
+    justification = _truncate_text(team.get("justification", ""), 150)
+    team_lead = team.get("team_lead", "")
+    team_lead_email = team.get("team_lead_email", "")
+
+    # Determinar color según score
+    if score_pct >= 80:
+        score_color = "Good"
+    elif score_pct >= 60:
+        score_color = "Warning"
+    else:
+        score_color = "Default"
+
+    # Items base
+    card_items = [
+        {
+            "type": "ColumnSet",
+            "columns": [
+                {
+                    "type": "Column",
+                    "width": "stretch",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": f"**{team_name}**",
+                            "wrap": True,
+                            "size": "Medium",
+                            "color": "Accent" if index == 0 else "Default"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": tower,
+                            "size": "Small",
+                            "isSubtle": True,
+                            "spacing": "None"
+                        }
+                    ]
+                },
+                {
+                    "type": "Column",
+                    "width": "auto",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": f"**{score_pct}%**",
+                            "size": "Large",
+                            "weight": "Bolder",
+                            "color": score_color,
+                            "horizontalAlignment": "Right"
+                        }
+                    ],
+                    "verticalContentAlignment": "Center"
+                }
+            ]
+        }
+    ]
+
+    # Agregar líder si existe
+    if team_lead:
+        leader_text = f"👤 {team_lead}"
+        if team_lead_email:
+            leader_text += f" • 📧 {team_lead_email}"
+        card_items.append({
+            "type": "TextBlock",
+            "text": leader_text,
+            "size": "Small",
+            "isSubtle": True,
+            "spacing": "Small"
+        })
+
+    # Agregar justificación si existe
+    if justification:
+        card_items.append({
+            "type": "TextBlock",
+            "text": f"💡 _{justification}_",
+            "wrap": True,
+            "size": "Small",
+            "spacing": "Small"
+        })
+
+    return {
+        "type": "Container",
+        "style": "emphasis" if index == 0 else "default",
+        "spacing": "Medium",
+        "separator": index > 0,
+        "items": card_items
+    }
+
+
+def _create_risk_item(risk: Dict) -> Dict:
+    """Crea un item de riesgo con color visual"""
+    if not isinstance(risk, dict):
+        return None
+
+    level = risk.get("level", "medio")
+    description = _truncate_text(risk.get("description", ""), 150)
+    mitigation = _truncate_text(risk.get("mitigation", ""), 100)
+
+    # Determinar estilo según nivel
+    level_lower = (level or "").lower()
+    if level_lower in ['alto', 'high', 'crítico', 'critical']:
+        container_style = "attention"
+    elif level_lower in ['medio', 'medium', 'moderado', 'moderate']:
+        container_style = "warning"
+    else:
+        container_style = "good"
+
+    items = [
+        {
+            "type": "ColumnSet",
+            "columns": [
+                {
+                    "type": "Column",
+                    "width": "auto",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": _get_risk_badge(level),
+                            "size": "Small",
+                            "weight": "Bolder"
+                        }
+                    ]
+                },
+                {
+                    "type": "Column",
+                    "width": "stretch",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": description,
+                            "wrap": True,
+                            "size": "Small"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+
+    # Agregar mitigación si existe
+    if mitigation:
+        items.append({
+            "type": "TextBlock",
+            "text": f"🛡️ _{mitigation}_",
+            "wrap": True,
+            "size": "Small",
+            "isSubtle": True,
+            "spacing": "Small"
+        })
+
+    return {
+        "type": "Container",
+        "style": container_style,
+        "spacing": "Small",
+        "items": items
+    }
+
+
 def generate_opportunity_card(
     opportunity_id: str,
     opportunity_name: str,
@@ -58,365 +213,514 @@ def generate_opportunity_card(
     pdf_url: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Genera un Adaptive Card profesional para análisis de oportunidades
-    
+    Genera un Adaptive Card corporativo y responsive para análisis de oportunidades
+
+    Optimizado para:
+    - Microsoft Teams Desktop
+    - Microsoft Teams Mobile
+    - Outlook
+
     Args:
         opportunity_id: ID de la oportunidad
         opportunity_name: Nombre de la oportunidad
         analysis_data: Datos del análisis de IA
         pdf_url: URL del PDF generado (opcional)
-        
+
     Returns:
         Diccionario con el Adaptive Card
     """
     try:
-        logging.info("🎨 Generando Adaptive Card para oportunidad...")
-        
+        logging.info("🎨 Generando Adaptive Card corporativo...")
+
         # Validación de datos
         if not analysis_data:
             analysis_data = {}
-        
+
         # Extraer datos del análisis
-        exec_summary = _truncate_text(analysis_data.get("executive_summary", "Análisis en proceso"), 600)
-        key_requirements = analysis_data.get("key_requirements", [])[:6]
-        teams = analysis_data.get("team_recommendations", [])[:6]
-        risks = analysis_data.get("risks", [])[:5]
+        exec_summary = _truncate_text(analysis_data.get("executive_summary", "Análisis en proceso"), 400)
+        key_requirements = analysis_data.get("key_requirements", [])[:5]
+        teams = analysis_data.get("team_recommendations", [])[:4]
+        risks = analysis_data.get("risks", [])[:3]
         overall_risk = analysis_data.get("overall_risk_level", "Medio")
         timeline = analysis_data.get("timeline_estimate", {})
         effort = analysis_data.get("effort_estimate", {})
-        recommendations = analysis_data.get("recommendations", [])[:5]
-        next_steps = analysis_data.get("next_steps", [])[:5]
-        clarification_questions = analysis_data.get("clarification_questions", [])[:4]
+        recommendations = analysis_data.get("recommendations", [])[:4]
+        next_steps = analysis_data.get("next_steps", [])[:4]
+        clarification_questions = analysis_data.get("clarification_questions", [])[:3]
         confidence = analysis_data.get("analysis_confidence", 0.75)
-        
+
         body = []
-        
+
         # ========================================
-        # 🎯 HEADER - Información Principal
+        # 🏢 HEADER CORPORATIVO
         # ========================================
         body.append({
             "type": "Container",
             "style": "emphasis",
             "bleed": True,
+            "spacing": "None",
             "items": [
                 {
                     "type": "TextBlock",
-                    "text": "🎯 Análisis Inteligente de Oportunidad",
+                    "text": "🎯 ANÁLISIS INTELIGENTE DE OPORTUNIDAD",
                     "weight": "Bolder",
-                    "size": "ExtraLarge",
-                    "wrap": True,
-                    "color": "Accent"
+                    "size": "Medium",
+                    "color": "Accent",
+                    "spacing": "None"
                 },
                 {
                     "type": "TextBlock",
-                    "text": f"**{_truncate_text(opportunity_name, 150)}**",
+                    "text": _truncate_text(opportunity_name, 100),
+                    "weight": "Bolder",
                     "size": "Large",
-                    "wrap": True
+                    "wrap": True,
+                    "spacing": "Small",
+                    "color": "Light"
                 },
                 {
-                    "type": "TextBlock",
-                    "text": f"ID: {opportunity_id} • Generado: {datetime.now().strftime('%d/%m/%Y %H:%M')}",
-                    "size": "Small",
-                    "isSubtle": True
+                    "type": "ColumnSet",
+                    "spacing": "Medium",
+                    "columns": [
+                        {
+                            "type": "Column",
+                            "width": "auto",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": f"📋 ID: {opportunity_id}",
+                                    "size": "Small",
+                                    "isSubtle": True
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Column",
+                            "width": "stretch",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": f"📅 {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+                                    "size": "Small",
+                                    "isSubtle": True,
+                                    "horizontalAlignment": "Center"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Column",
+                            "width": "auto",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": f"Riesgo: {_get_risk_badge(overall_risk)}",
+                                    "weight": "Bolder",
+                                    "size": "Small",
+                                    "horizontalAlignment": "Right"
+                                }
+                            ]
+                        }
+                    ]
                 }
             ]
         })
-        
+
         # ========================================
         # 📊 RESUMEN EJECUTIVO
         # ========================================
         body.append({
             "type": "Container",
+            "spacing": "Medium",
             "items": [
                 {
                     "type": "TextBlock",
-                    "text": "📊 Resumen Ejecutivo",
+                    "text": "📊 RESUMEN EJECUTIVO",
                     "weight": "Bolder",
-                    "size": "Medium",
-                    "spacing": "Large"
+                    "size": "Small",
+                    "color": "Accent"
                 },
                 {
                     "type": "TextBlock",
                     "text": exec_summary,
                     "wrap": True,
-                    "size": "Small"
+                    "size": "Small",
+                    "spacing": "Small"
                 }
             ]
         })
-        
+
         # ========================================
-        # 📋 REQUERIMIENTOS CLAVE
+        # 📈 MÉTRICAS CLAVE
         # ========================================
-        if key_requirements:
-            req_items = [{"type": "TextBlock", "text": f"• {req}", "wrap": True, "size": "Small"} 
-                        for req in key_requirements if req]
-            if req_items:
-                body.append({
-                    "type": "Container",
-                    "items": [
+        min_hours = effort.get("min_hours", 0) if effort else 0
+        max_hours = effort.get("max_hours", 0) if effort else 0
+        complexity = effort.get("complexity", "Media") if effort else "Media"
+        duration = timeline.get("total_duration", "Por definir") if timeline else "Por definir"
+        confidence_pct = int(confidence * 100) if isinstance(confidence, (int, float)) else 75
+
+        body.append({
+            "type": "Container",
+            "style": "emphasis",
+            "spacing": "Medium",
+            "items": [
+                {
+                    "type": "ColumnSet",
+                    "columns": [
                         {
-                            "type": "TextBlock",
-                            "text": "📋 Requerimientos Clave",
-                            "weight": "Bolder",
-                            "size": "Medium",
-                            "spacing": "Medium"
+                            "type": "Column",
+                            "width": "1",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": "⏱️ Duración",
+                                    "size": "Small",
+                                    "isSubtle": True,
+                                    "horizontalAlignment": "Center"
+                                },
+                                {
+                                    "type": "TextBlock",
+                                    "text": str(duration),
+                                    "weight": "Bolder",
+                                    "size": "Small",
+                                    "horizontalAlignment": "Center",
+                                    "wrap": True
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Column",
+                            "width": "1",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": "💪 Esfuerzo",
+                                    "size": "Small",
+                                    "isSubtle": True,
+                                    "horizontalAlignment": "Center"
+                                },
+                                {
+                                    "type": "TextBlock",
+                                    "text": f"{min_hours}-{max_hours}h" if min_hours and max_hours else "Por definir",
+                                    "weight": "Bolder",
+                                    "size": "Small",
+                                    "horizontalAlignment": "Center"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Column",
+                            "width": "1",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": "📊 Complejidad",
+                                    "size": "Small",
+                                    "isSubtle": True,
+                                    "horizontalAlignment": "Center"
+                                },
+                                {
+                                    "type": "TextBlock",
+                                    "text": str(complexity),
+                                    "weight": "Bolder",
+                                    "size": "Small",
+                                    "horizontalAlignment": "Center"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Column",
+                            "width": "1",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": "🎯 Confianza",
+                                    "size": "Small",
+                                    "isSubtle": True,
+                                    "horizontalAlignment": "Center"
+                                },
+                                {
+                                    "type": "TextBlock",
+                                    "text": f"{confidence_pct}%",
+                                    "weight": "Bolder",
+                                    "size": "Small",
+                                    "horizontalAlignment": "Center",
+                                    "color": "Good" if confidence_pct >= 70 else "Warning"
+                                }
+                            ]
                         }
-                    ] + req_items
-                })
-        
+                    ]
+                }
+            ]
+        })
+
         # ========================================
         # 👥 EQUIPOS RECOMENDADOS
         # ========================================
         if teams:
-            team_columns = []
-            for team in teams[:4]:
-                if isinstance(team, dict):
-                    tower = team.get("tower", "")
-                    team_name = team.get("team_name", "")
-                    score = team.get("relevance_score", 0)
-                    score_pct = int(score * 100) if isinstance(score, (int, float)) else 0
-                    
-                    team_columns.append({
-                        "type": "Column",
-                        "width": "stretch",
-                        "items": [
-                            {
-                                "type": "TextBlock",
-                                "text": f"{_get_tower_icon(tower)} **{team_name}**",
-                                "wrap": True,
-                                "size": "Small"
-                            },
-                            {
-                                "type": "TextBlock",
-                                "text": f"Match: {score_pct}%",
-                                "size": "Small",
-                                "isSubtle": True
-                            }
-                        ]
-                    })
-            
-            if team_columns:
+            team_items = []
+            for idx, team in enumerate(teams[:4]):
+                team_card = _create_team_card(team, idx)
+                if team_card:
+                    team_items.append(team_card)
+
+            if team_items:
                 body.append({
                     "type": "Container",
+                    "spacing": "Medium",
                     "items": [
                         {
                             "type": "TextBlock",
-                            "text": "👥 Equipos Recomendados",
+                            "text": "👥 EQUIPOS RECOMENDADOS",
                             "weight": "Bolder",
-                            "size": "Medium",
-                            "spacing": "Medium"
+                            "size": "Small",
+                            "color": "Accent"
+                        }
+                    ] + team_items
+                })
+
+        # ========================================
+        # 📋 REQUERIMIENTOS CLAVE
+        # ========================================
+        if key_requirements:
+            req_text = "\n".join([f"• {_truncate_text(req, 100)}" for req in key_requirements[:5] if req])
+            if req_text:
+                body.append({
+                    "type": "Container",
+                    "spacing": "Medium",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": "📋 REQUERIMIENTOS CLAVE",
+                            "weight": "Bolder",
+                            "size": "Small",
+                            "color": "Accent"
                         },
                         {
-                            "type": "ColumnSet",
-                            "columns": team_columns[:2]
+                            "type": "TextBlock",
+                            "text": req_text,
+                            "wrap": True,
+                            "size": "Small",
+                            "spacing": "Small"
                         }
-                    ] + ([{"type": "ColumnSet", "columns": team_columns[2:4]}] if len(team_columns) > 2 else [])
+                    ]
                 })
-        
+
         # ========================================
-        # ⚠️ EVALUACIÓN DE RIESGOS
+        # ⚠️ RIESGOS IDENTIFICADOS
         # ========================================
-        if risks or overall_risk:
-            risk_items = [{
-                "type": "TextBlock",
-                "text": f"{_get_risk_icon(overall_risk)} Nivel General: **{overall_risk}**",
-                "wrap": True
-            }]
-            
+        if risks:
+            risk_items = []
             for risk in risks[:3]:
-                if isinstance(risk, dict):
-                    level = risk.get("level", "")
-                    desc = _truncate_text(risk.get("description", ""), 150)
-                    risk_items.append({
-                        "type": "TextBlock",
-                        "text": f"{_get_risk_icon(level)} {desc}",
-                        "wrap": True,
-                        "size": "Small"
-                    })
-            
-            body.append({
-                "type": "Container",
-                "items": [
-                    {
-                        "type": "TextBlock",
-                        "text": "⚠️ Evaluación de Riesgos",
-                        "weight": "Bolder",
-                        "size": "Medium",
-                        "spacing": "Medium"
-                    }
-                ] + risk_items
-            })
-        
-        # ========================================
-        # ⏱️ ESTIMACIÓN
-        # ========================================
-        if timeline or effort:
-            est_items = []
-            if timeline.get("total_duration"):
-                est_items.append({
-                    "type": "TextBlock",
-                    "text": f"⏱️ **Duración estimada:** {timeline['total_duration']}",
-                    "wrap": True
-                })
-            
-            if effort:
-                min_h = effort.get("min_hours", 0)
-                max_h = effort.get("max_hours", 0)
-                complexity = effort.get("complexity", "")
-                if min_h and max_h:
-                    est_items.append({
-                        "type": "TextBlock",
-                        "text": f"💪 **Esfuerzo:** {min_h}-{max_h} horas ({complexity})",
-                        "wrap": True
-                    })
-            
-            if est_items:
+                risk_item = _create_risk_item(risk)
+                if risk_item:
+                    risk_items.append(risk_item)
+
+            if risk_items:
                 body.append({
                     "type": "Container",
+                    "spacing": "Medium",
                     "items": [
                         {
                             "type": "TextBlock",
-                            "text": "📈 Estimación",
+                            "text": "⚠️ RIESGOS IDENTIFICADOS",
                             "weight": "Bolder",
-                            "size": "Medium",
-                            "spacing": "Medium"
+                            "size": "Small",
+                            "color": "Accent"
                         }
-                    ] + est_items
+                    ] + risk_items
                 })
-        
+
         # ========================================
         # 💡 RECOMENDACIONES
         # ========================================
         if recommendations:
-            rec_items = [{"type": "TextBlock", "text": f"💡 {rec}", "wrap": True, "size": "Small"} 
-                        for rec in recommendations if rec]
-            if rec_items:
+            rec_text = "\n".join([f"→ {_truncate_text(rec, 100)}" for rec in recommendations[:4] if rec])
+            if rec_text:
                 body.append({
                     "type": "Container",
+                    "spacing": "Medium",
                     "items": [
                         {
                             "type": "TextBlock",
-                            "text": "💡 Recomendaciones",
+                            "text": "💡 RECOMENDACIONES",
                             "weight": "Bolder",
-                            "size": "Medium",
-                            "spacing": "Medium"
+                            "size": "Small",
+                            "color": "Accent"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": rec_text,
+                            "wrap": True,
+                            "size": "Small",
+                            "spacing": "Small"
                         }
-                    ] + rec_items[:4]
+                    ]
                 })
-        
+
         # ========================================
-        # ❓ PREGUNTAS DE CLARIFICACIÓN
+        # ❓ PUNTOS A CLARIFICAR
         # ========================================
         if clarification_questions:
-            q_items = [{"type": "TextBlock", "text": f"❓ {q}", "wrap": True, "size": "Small"} 
-                      for q in clarification_questions if q]
-            if q_items:
+            q_text = "\n".join([f"❓ {_truncate_text(q, 100)}" for q in clarification_questions[:3] if q])
+            if q_text:
                 body.append({
                     "type": "Container",
                     "style": "warning",
+                    "spacing": "Medium",
                     "items": [
                         {
                             "type": "TextBlock",
-                            "text": "❓ Puntos a Clarificar",
+                            "text": "PUNTOS A CLARIFICAR",
                             "weight": "Bolder",
-                            "size": "Medium"
+                            "size": "Small"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": q_text,
+                            "wrap": True,
+                            "size": "Small",
+                            "spacing": "Small"
                         }
-                    ] + q_items[:3]
+                    ]
                 })
-        
+
         # ========================================
         # 🎯 PRÓXIMOS PASOS
         # ========================================
         if next_steps:
-            step_items = [{"type": "TextBlock", "text": f"→ {step}", "wrap": True, "size": "Small"} 
-                         for step in next_steps if step]
-            if step_items:
+            steps_text = "\n".join([f"{idx + 1}. {_truncate_text(step, 100)}" for idx,
+                                   step in enumerate(next_steps[:4]) if step])
+            if steps_text:
                 body.append({
                     "type": "Container",
+                    "spacing": "Medium",
                     "items": [
                         {
                             "type": "TextBlock",
-                            "text": "🎯 Próximos Pasos",
+                            "text": "🎯 PRÓXIMOS PASOS",
                             "weight": "Bolder",
-                            "size": "Medium",
-                            "spacing": "Medium"
+                            "size": "Small",
+                            "color": "Accent"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": steps_text,
+                            "wrap": True,
+                            "size": "Small",
+                            "spacing": "Small"
                         }
-                    ] + step_items[:4]
+                    ]
                 })
-        
+
         # ========================================
-        # 🔗 ACCIONES
+        # ⚠️ DISCLAIMER
         # ========================================
-        # Acciones deshabilitadas temporalmente
-        # TODO: Rehabilitar cuando se implemente correctamente la URL del PDF
-        actions = []
-        
-        # if pdf_url:
-        #     actions.append({
-        #         "type": "Action.OpenUrl",
-        #         "title": "📄 Descargar PDF",
-        #         "url": pdf_url
-        #     })
-        
+        body.append({"type": "Container",
+                     "style": "warning",
+                     "spacing": "Large",
+                     "items": [{"type": "TextBlock",
+                                "text": "⚠️ **AVISO IMPORTANTE**",
+                                "weight": "Bolder",
+                                "size": "Small"},
+                               {"type": "TextBlock",
+                                "text": (
+                                    "Este análisis fue generado automáticamente por IA (GPT-4o-mini). "
+                                    "Las estimaciones, recomendaciones y asignaciones de equipos son sugerencias "
+                                    "basadas en la información disponible y **pueden no ser precisas**. "
+                                    "Se recomienda validar con los líderes de torre antes de tomar decisiones."
+                                ),
+                                # noqa: E501
+                                "wrap": True,
+                                "size": "Small",
+                                "spacing": "Small"}]})
+
         # ========================================
-        # 📊 FOOTER - Confianza del Análisis
+        # 📝 FOOTER CORPORATIVO
         # ========================================
-        confidence_pct = int(confidence * 100) if isinstance(confidence, (int, float)) else 75
         body.append({
             "type": "Container",
             "separator": True,
             "spacing": "Medium",
             "items": [
                 {
-                    "type": "TextBlock",
-                    "text": f"🤖 Confianza del análisis: {confidence_pct}% • Modelo: GPT-4o-mini",
-                    "size": "Small",
-                    "isSubtle": True,
-                    "horizontalAlignment": "Right"
+                    "type": "ColumnSet",
+                    "columns": [
+                        {
+                            "type": "Column",
+                            "width": "stretch",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": "🤖 Análisis generado con GPT-4o-mini",
+                                    "size": "Small",
+                                    "isSubtle": True
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Column",
+                            "width": "auto",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": f"📅 {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+                                    "size": "Small",
+                                    "isSubtle": True,
+                                    "horizontalAlignment": "Right"
+                                }
+                            ]
+                        }
+                    ]
                 }
             ]
         })
-        
+
         # ========================================
         # 🎴 CONSTRUIR CARD FINAL
         # ========================================
         card = {
             "type": "AdaptiveCard",
             "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-            "version": "1.5",
-            "body": body
+            "version": "1.4",
+            "body": body,
+            "msteams": {
+                "width": "Full"
+            }
         }
-        
-        if actions:
-            card["actions"] = actions
-        
-        logging.info("✅ Adaptive Card generado exitosamente")
+
+        logging.info("✅ Adaptive Card corporativo generado exitosamente")
         return card
-        
+
     except Exception as e:
         logging.error(f"❌ Error generando Adaptive Card: {str(e)}")
-        # Retornar card de error
         return {
             "type": "AdaptiveCard",
             "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-            "version": "1.5",
+            "version": "1.4",
             "body": [
                 {
-                    "type": "TextBlock",
-                    "text": "⚠️ Error generando visualización",
-                    "weight": "Bolder",
-                    "color": "Attention"
-                },
-                {
-                    "type": "TextBlock",
-                    "text": f"Oportunidad: {opportunity_name}",
-                    "wrap": True
-                },
-                {
-                    "type": "TextBlock",
-                    "text": str(e),
-                    "size": "Small",
-                    "isSubtle": True
+                    "type": "Container",
+                    "style": "attention",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": "⚠️ Error en el análisis",
+                            "weight": "Bolder",
+                            "size": "Medium"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": f"Oportunidad: {opportunity_name}",
+                            "wrap": True,
+                            "size": "Small"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": f"Error: {str(e)}",
+                            "size": "Small",
+                            "isSubtle": True,
+                            "wrap": True
+                        }
+                    ]
                 }
             ]
         }

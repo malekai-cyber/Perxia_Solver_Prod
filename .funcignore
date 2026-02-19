@@ -1,10 +1,14 @@
 .git
+.github
 .vscode
 __azurite*
 __blobstorage__
 __queuestorage__
 local.settings.json
 test.py
+test_*.py
+test_*.json
+tests/
 .venv
 *.pyc
 __pycache__
@@ -12,3 +16,9 @@ __pycache__
 *.log
 *.pdf
 .env
+.flake8
+.pytest_cache
+*.md
+scripts/
+*.ps1
+*.bat

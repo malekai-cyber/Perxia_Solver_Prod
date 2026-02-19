@@ -1,0 +1,7 @@
+{
+    "opportunityid": "test-prod-001",
+    "opportunity_description": "Necesitamos desarrollar una solución de inteligencia artificial que incluya modelos de machine learning y procesamiento de datos en tiempo real. El proyecto requiere experiencia en Python, frameworks de IA modernos y capacidad de implementación en la nube.",
+    "torres_needed": ["IA", "DATA"],
+    "priority": "high",
+    "expected_start_date": "2024-02-01"
+}

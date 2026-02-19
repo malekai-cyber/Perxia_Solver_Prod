@@ -21,7 +21,7 @@ El usuario necesitaba:
 1. **Eliminar dependencia de Azure DevOps** - Ya no se usará
 2. **Integrar con Dynamics 365** - Recibir oportunidades comerciales
 3. **Flujo via Power Automate** - HTTP POST con el body de la oportunidad
-4. **Nuevo repositorio** - `https://github.com/malekai-cyber/agente_analisis_inteligente.git`
+4. **Nuevo repositorio** - `https://github.com/malekai-cyber/Perxia_Solver_Prod.git`
 
 ---
 
@@ -226,7 +226,7 @@ Invoke-RestMethod -Uri "http://localhost:7071/api/analyze" -Method POST -Body $p
 ## 🔗 Referencias
 
 - **Repositorio anterior**: PerxiaSolverApp
-- **Nuevo repositorio**: https://github.com/malekai-cyber/agente_analisis_inteligente.git
+- **Nuevo repositorio**: https://github.com/malekai-cyber/Perxia_Solver_Prod.git
 
 ---
 

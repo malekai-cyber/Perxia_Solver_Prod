@@ -14,46 +14,46 @@ from openai import AzureOpenAI
 
 class OpenAIService:
     """Servicio para Azure OpenAI (GPT-4o-mini)"""
-    
+
     def __init__(self):
         self.endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
         self.key = os.getenv("AZURE_OPENAI_KEY") or os.getenv("AZURE_OPENAI_API_KEY")
         self.deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o-mini")
         self.api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-10-21")
-        
+
         if not self.endpoint or not self.key:
             raise ValueError("AZURE_OPENAI_ENDPOINT y AZURE_OPENAI_KEY/AZURE_OPENAI_API_KEY son requeridos")
-        
+
         # Cliente de Azure OpenAI
         self.client = AzureOpenAI(
             azure_endpoint=self.endpoint,
             api_key=self.key,
             api_version=self.api_version
         )
-        
+
         logging.info(f"✅ OpenAIService inicializado: {self.deployment}")
-    
+
     def analyze_opportunity(
-        self, 
+        self,
         opportunity_text: str,
         available_teams: List[Dict[str, Any]]
     ) -> Optional[Dict[str, Any]]:
         """
         Analiza una oportunidad de Dynamics 365 con razonamiento profundo
-        
+
         Args:
             opportunity_text: Texto formateado de la oportunidad
             available_teams: Equipos disponibles con sus habilidades
-            
+
         Returns:
             Diccionario con el análisis completo
         """
         try:
             logging.info("🧠 Iniciando análisis de oportunidad con IA...")
-            
+
             # Preparar contexto de equipos
             teams_context = self._format_teams_context(available_teams)
-            
+
             prompt = f"""Eres un experto analista de oportunidades comerciales y propuestas técnicas empresariales.
 Analiza la siguiente oportunidad en profundidad y genera un análisis completo para apoyar la toma de decisiones comerciales y técnicas.
 
@@ -68,11 +68,11 @@ Analiza la oportunidad siguiendo este formato JSON EXACTO:
 
 {{
   "executive_summary": "Resumen ejecutivo conciso del análisis (3-4 párrafos). Incluye: qué solicita el cliente, complejidad estimada, viabilidad y recomendación general.",
-  
+
   "key_requirements": ["Requerimiento clave 1", "Requerimiento clave 2", "Requerimiento clave 3"],
-  
+
   "technical_assessment": "Evaluación técnica detallada. Qué implica técnicamente este proyecto, qué arquitectura podría necesitar, qué consideraciones técnicas son importantes.",
-  
+
   "technology_stack": {{
     "frontend": ["tecnologías frontend identificadas o sugeridas"],
     "backend": ["tecnologías backend"],
@@ -82,9 +82,9 @@ Analiza la oportunidad siguiendo este formato JSON EXACTO:
     "integrations": ["integraciones necesarias"],
     "other": ["otras tecnologías relevantes"]
   }},
-  
+
   "required_towers": ["Torre TORRE1", "Torre TORRE2"],
-  
+
   "team_recommendations": [
     {{
       "tower": "Torre NOMBRE",
@@ -97,7 +97,7 @@ Analiza la oportunidad siguiendo este formato JSON EXACTO:
       "estimated_involvement": "Full-time / Part-time / Consultoría"
     }}
   ],
-  
+
   "risks": [
     {{
       "category": "Técnico/Comercial/Recursos/Timeline",
@@ -109,7 +109,7 @@ Analiza la oportunidad siguiendo este formato JSON EXACTO:
     }}
   ],
   "overall_risk_level": "Bajo/Medio/Alto",
-  
+
   "timeline_estimate": {{
     "total_duration": "X-Y meses",
     "phases": [
@@ -135,7 +135,7 @@ Analiza la oportunidad siguiendo este formato JSON EXACTO:
       }}
     ]
   }},
-  
+
   "effort_estimate": {{
     "min_hours": 500,
     "max_hours": 800,
@@ -143,24 +143,24 @@ Analiza la oportunidad siguiendo este formato JSON EXACTO:
     "team_size_recommended": "X-Y personas",
     "assumptions": ["Asunción 1", "Asunción 2"]
   }},
-  
+
   "recommendations": [
     "Recomendación estratégica o táctica 1",
     "Recomendación 2",
     "Recomendación 3"
   ],
-  
+
   "clarification_questions": [
     "Pregunta que necesita aclaración del cliente 1",
     "Pregunta 2"
   ],
-  
+
   "next_steps": [
     "Paso siguiente 1",
     "Paso siguiente 2",
     "Paso siguiente 3"
   ],
-  
+
   "analysis_confidence": 0.80
 }}
 
@@ -173,7 +173,7 @@ REGLAS IMPORTANTES:
 6. Las preguntas de clarificación deben ayudar a refinar la propuesta
 7. El equipo de QA (Torre Quality Assurance) y PMO (Torre PMO) son OBLIGATORIOS en proyectos medianos/grandes
 """
-            
+
             response = self.client.chat.completions.create(
                 model=self.deployment,
                 messages=[
@@ -183,14 +183,14 @@ REGLAS IMPORTANTES:
                 temperature=0.3,
                 max_tokens=12000
             )
-            
+
             result_text = response.choices[0].message.content.strip()
-            
+
             logging.info(f"📝 Respuesta recibida: {len(result_text)} caracteres")
-            
+
             # Extraer JSON de la respuesta
             result_json = self._extract_json(result_text)
-            
+
             if result_json:
                 logging.info("✅ Análisis de oportunidad completado con éxito")
                 return result_json
@@ -198,13 +198,13 @@ REGLAS IMPORTANTES:
                 logging.error("❌ No se pudo parsear el JSON de la respuesta")
                 logging.error(f"❌ Primeros 1000 caracteres: {result_text[:1000]}")
                 return None
-                
+
         except Exception as e:
             logging.error(f"❌ Error en análisis con IA: {str(e)}")
             import traceback
             logging.error(f"❌ Traceback: {traceback.format_exc()}")
             return None
-    
+
     def _format_teams_context(self, teams: List[Dict[str, Any]]) -> str:
         """Formatea el contexto de equipos para el prompt"""
         lines = []
@@ -216,7 +216,7 @@ REGLAS IMPORTANTES:
             email = team.get('team_lead_email') or team.get('leader_email', 'N/A')
             skills = team.get('skills', [])
             description = team.get('description', 'N/A')
-            
+
             lines.append(f"- {name} ({tower})")
             lines.append(f"  ID: {team.get('id', 'N/A')}")
             lines.append(f"  Líder: {leader}")
@@ -226,43 +226,43 @@ REGLAS IMPORTANTES:
             lines.append(f"  Descripción: {description}")
             lines.append("")
         return "\n".join(lines)
-    
+
     def _extract_json(self, text: str) -> Optional[Dict[str, Any]]:
         """Extrae JSON de una respuesta que puede contener texto adicional"""
         try:
             # Intentar parsear directo
             return json.loads(text)
-        except:
+        except BaseException:
             pass
-        
+
         # Remover tags de razonamiento de DeepSeek-R1 si existen
         text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
         text = text.strip()
-        
+
         # Buscar bloque de código JSON
         json_match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
         if json_match:
             try:
                 return json.loads(json_match.group(1))
-            except:
+            except BaseException:
                 pass
-        
+
         # Buscar bloque de código sin especificar lenguaje
         json_match = re.search(r'```\s*(.*?)\s*```', text, re.DOTALL)
         if json_match:
             try:
                 return json.loads(json_match.group(1))
-            except:
+            except BaseException:
                 pass
-        
+
         # Buscar primer { hasta último }
         start = text.find('{')
         end = text.rfind('}')
         if start != -1 and end != -1:
             try:
-                json_text = text[start:end+1]
+                json_text = text[start:end + 1]
                 return json.loads(json_text)
             except Exception as e:
                 logging.error(f"❌ Error parseando JSON extraído: {str(e)}")
-        
+
         return None

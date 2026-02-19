@@ -1,322 +1,331 @@
 [
   {
     "id": "1",
-    "team_name": "IA",
-    "tower": "Torre IA",
-    "skills": [
-      "Diseño y entrenamiento de modelos",
-      "Procesamiento de lenguaje natural",
-      "NLP",
-      "Visión por computador",
-      "Análisis predictivo",
-      "Agentes y chatbots inteligentes",
-      "Integración con APIs de IA",
-      "Servicios de IA",
-      "Automatización"
-    ],
-    "team_lead": "Angie T. Pena",
-    "team_lead_email": "angiepena@cbit-online.com",
-    "expertise_areas": [
-      "Machine Learning",
-      "Deep Learning",
-      "NLP",
-      "Computer Vision",
-      "IA Generativa",
-      "RAG"
-    ],
-    "technologies": [
-      "LLM",
-      "ML",
-      "DL",
-      "NLP",
-      "IA generativa",
-      "RAG",
-      "Amazon Bedrock",
-      "Amazon SageMaker",
-      "Amazon Rekognition",
-      "Amazon Lex",
-      "Amazon Textract",
-      "AWS Lambda",
-      "Amazon Comprehend",
-      "Azure AI Studio",
-      "GitHub Copilot",
-      "Copilot Studio",
-      "Azure Cognitive Services",
-      "Power Automate"
-    ],
-    "frameworks": [
-      "Langchain",
-      "agno",
-      "Pandas",
-      "NumPy",
-      "Matplotlib",
-      "Seaborn",
-      "Plotly",
-      "Scikit-Learn",
-      "XGBoost",
-      "TensorFlow",
-      "Keras",
-      "PyTorch",
-      "OpenCV",
-      "Boto3"
-    ],
-    "description": "Torre especializada en inteligencia artificial, machine learning, NLP, visión por computador y automatización con IA"
-  },
-  {
-    "id": "2",
-    "team_name": "DATA",
-    "tower": "Torre DATA",
-    "skills": [
-      "Modelado de datos",
-      "Integración y transformación",
-      "ETL/ELT",
-      "Análisis exploratorio",
-      "Visualización",
-      "Calidad de datos",
-      "Gobierno y catalogación"
-    ],
-    "team_lead": "Daniel S. Zambrano",
-    "team_lead_email": "danielzambrano@cbit-online.com",
-    "expertise_areas": [
-      "Data Engineering",
-      "Data Analytics",
-      "Business Intelligence",
-      "Data Governance",
-      "ETL",
-      "Data Warehousing"
-    ],
-    "technologies": [
-      "Data Lake",
-      "Data Warehouse",
-      "Big Data",
-      "ETL",
-      "Pipelines de datos",
-      "Bases relacionales",
-      "Bases no relacionales",
-      "Azure Synapse",
-      "Azure Data Factory",
-      "Power BI",
-      "SQL Server",
-      "PostgreSQL",
-      "Databricks",
-      "Snowflake",
-      "AWS Glue"
-    ],
-    "frameworks": [
-      "Spark",
-      "Pandas",
-      "NumPy",
-      "Airflow",
-      "dbt",
-      "PySpark"
-    ],
-    "description": "Torre de datos especializada en ingeniería de datos, ETL, análisis, visualización y gobierno de datos"
-  },
-  {
-    "id": "3",
     "team_name": "CIBERSEGURIDAD",
     "tower": "Torre CIBERSEGURIDAD",
     "skills": [
-      "Seguridad de redes",
-      "Gestión de vulnerabilidades",
-      "Análisis de incidentes",
-      "Monitoreo de amenazas",
-      "Cumplimiento normativo",
-      "Protección de datos"
+      "Seguridad de redes y sistemas",
+      "Pruebas de penetración",
+      "Análisis de vulnerabilidades",
+      "Gestión de identidades y accesos",
+      "Cumplimiento normativo (ISO 27001, NIST, OWASP)",
+      "Respuesta a incidentes de seguridad",
+      "Protección de datos",
+      "Seguridad en la nube"
     ],
-    "team_lead": "Daniel A. García",
-    "team_lead_email": "Danielgarcia@periferia-it.com",
+    "team_lead": "Juan F. Lamprea Ortegon",
+    "team_lead_email": "juanlamprea@periferia-it.com",
     "expertise_areas": [
       "Cybersecurity",
-      "Security Operations",
-      "Incident Response",
-      "Compliance",
-      "Threat Intelligence",
-      "Network Security"
+      "Penetration Testing",
+      "Vulnerability Assessment",
+      "Identity & Access Management",
+      "Security Compliance",
+      "Incident Response"
     ],
     "technologies": [
       "SIEM",
-      "SOC",
-      "IDS/IPS",
-      "Criptografía",
-      "Gestión de identidades",
-      "Control de accesos",
-      "Hardening de sistemas",
-      "Microsoft Defender",
+      "Splunk",
       "Azure Sentinel",
-      "AWS GuardDuty",
+      "CrowdStrike",
       "Qualys",
       "Nessus",
-      "Wireshark",
+      "Burp Suite",
       "Metasploit",
-      "Splunk"
+      "Azure AD",
+      "Okta",
+      "FortiGate",
+      "Palo Alto",
+      "WAF",
+      "DLP"
     ],
     "frameworks": [
-      "MITRE ATT&CK",
-      "NIST",
       "ISO 27001",
+      "NIST Cybersecurity Framework",
       "OWASP",
-      "CIS Controls"
+      "CIS Controls",
+      "GDPR",
+      "SOC 2"
     ],
-    "description": "Torre de ciberseguridad enfocada en protección, monitoreo, análisis de amenazas y cumplimiento normativo"
+    "description": "Torre de ciberseguridad, protección de datos, cumplimiento normativo y respuesta a incidentes"
   },
   {
-    "id": "4",
-    "team_name": "RPA",
-    "tower": "Torre RPA",
-    "skills": [
-      "Diseño de flujos automatizados",
-      "Integración con APIs y sistemas legados",
-      "Manejo de colas y orquestadores",
-      "Análisis de procesos",
-      "Documentación y mantenimiento de bots"
-    ],
-    "team_lead": "Cristian A. Betancourth",
-    "team_lead_email": "cristianbetancourth@periferia-it.com",
-    "expertise_areas": [
-      "Robotic Process Automation",
-      "Process Mining",
-      "Workflow Automation",
-      "Integration",
-      "Bot Development"
-    ],
-    "technologies": [
-      "RPA",
-      "OCR",
-      "API REST",
-      "JSON",
-      "XML",
-      "Integración con ERP y CRM",
-      "Workflows",
-      "Control de versiones",
-      "Power Automate",
-      "UiPath",
-      "Automation Anywhere",
-      "Blue Prism",
-      "WinAutomation",
-      "Selenium",
-      "ServiceNow"
-    ],
-    "frameworks": [
-      "UiPath Framework RE",
-      "Power Platform",
-      "Python Automation",
-      ".NET Automation",
-      "Selenium Framework"
-    ],
-    "description": "Torre de automatización robótica de procesos, integración de sistemas y optimización de workflows"
-  },
-  {
-    "id": "5",
-    "team_name": "FULLSTACK",
-    "tower": "Torre FULLSTACK",
-    "skills": [
-      "Desarrollo frontend y backend",
-      "Consumo de APIs",
-      "Integración de microservicios",
-      "Control de versiones",
-      "Despliegue en la nube",
-      "Pruebas unitarias y automatizadas"
-    ],
-    "team_lead": "Manuel F. Galindo",
-    "team_lead_email": "manuelgalindo@periferia-it.com",
-    "expertise_areas": [
-      "Full Stack Development",
-      "Frontend Development",
-      "Backend Development",
-      "API Development",
-      "Microservices",
-      "DevOps"
-    ],
-    "technologies": [
-      "HTML",
-      "CSS",
-      "JavaScript",
-      "TypeScript",
-      "Node.js",
-      "REST",
-      "GraphQL",
-      ".NET",
-      "Java",
-      "Python",
-      "CI/CD",
-      "Visual Studio Code",
-      "GitHub",
-      "Postman",
-      "Docker",
-      "Kubernetes",
-      "Jenkins",
-      "Azure DevOps",
-      "AWS Elastic Beanstalk"
-    ],
-    "frameworks": [
-      "Angular",
-      "React",
-      "Vue.js",
-      "Express.js",
-      "Spring Boot",
-      "Django",
-      "Flask"
-    ],
-    "description": "Torre de desarrollo full stack, frontend, backend, APIs, microservicios y despliegue en cloud"
-  },
-  {
-    "id": "6",
-    "team_name": "QA",
-    "tower": "Torre Quality Assurance",
-    "skills": [
-      "Testing manual y automatizado",
-      "Pruebas de rendimiento",
-      "Pruebas de seguridad",
-      "Test planning",
-      "Calidad de software"
-    ],
-    "team_lead": "Alejandro Ortiz",
-    "team_lead_email": "alejandroortiz@cbit-online.com",
-    "expertise_areas": [
-      "Quality Assurance",
-      "Test Automation",
-      "Performance Testing",
-      "Security Testing"
-    ],
-    "technologies": [
-      "Selenium",
-      "Cypress",
-      "JMeter",
-      "Postman",
-      "Azure DevOps",
-      "TestRail"
-    ],
-    "frameworks": [],
-    "description": "Equipo obligatorio de aseguramiento de calidad y testing"
-  },
-  {
-    "id": "7",
+    "id": "2",
     "team_name": "PMO",
     "tower": "Torre PMO",
     "skills": [
       "Gestión de proyectos",
-      "Metodologías ágiles",
+      "Planificación y seguimiento",
+      "Gestión de riesgos",
+      "Gestión de stakeholders",
+      "Metodologías ágiles y tradicionales",
       "Coordinación de equipos",
-      "Planificación",
-      "Gestión de stakeholders"
+      "Control de presupuestos",
+      "Reportes ejecutivos"
     ],
-    "team_lead": "Angie E. Olarte",
-    "team_lead_email": "angieolarte@cbit-online.com",
+    "team_lead": "Joao L. Cabezas Cruz",
+    "team_lead_email": "joaocabezas@periferiaitgroup.com",
     "expertise_areas": [
       "Project Management",
-      "Agile",
-      "Scrum",
-      "Coordination"
+      "Program Management",
+      "Agile Methodologies",
+      "Risk Management",
+      "Stakeholder Management",
+      "Resource Planning"
     ],
     "technologies": [
-      "Azure DevOps",
+      "Microsoft Project",
       "Jira",
-      "MS Project",
-      "Confluence"
+      "Azure DevOps",
+      "Monday.com",
+      "Asana",
+      "Confluence",
+      "Power BI",
+      "Excel",
+      "Teams",
+      "SharePoint"
     ],
-    "frameworks": [],
-    "description": "Equipo obligatorio de gestión de proyectos y coordinación"
+    "frameworks": [
+      "PMBOK",
+      "Scrum",
+      "Kanban",
+      "SAFe",
+      "PRINCE2",
+      "Lean"
+    ],
+    "description": "Torre de gestión de proyectos, coordinación de equipos y seguimiento de iniciativas empresariales"
+  },
+  {
+    "id": "3",
+    "team_name": "DATA",
+    "tower": "Torre DATA",
+    "skills": [
+      "Modelado de datos",
+      "ETL y pipelines de datos",
+      "Data warehousing",
+      "Business Intelligence",
+      "Análisis de datos",
+      "Integración y transformación",
+      "Visualización de datos",
+      "Gobierno de datos"
+    ],
+    "team_lead": "Juan F. Reyes",
+    "team_lead_email": "juan.reyes@cbit-online.com",
+    "expertise_areas": [
+      "Data Engineering",
+      "Data Analytics",
+      "Business Intelligence",
+      "Data Warehousing",
+      "Data Governance",
+      "Big Data"
+    ],
+    "technologies": [
+      "SQL Server",
+      "Oracle",
+      "PostgreSQL",
+      "Snowflake",
+      "Azure Synapse",
+      "Databricks",
+      "Power BI",
+      "Tableau",
+      "SSIS",
+      "Azure Data Factory",
+      "Apache Spark",
+      "Python",
+      "dbt"
+    ],
+    "frameworks": [
+      "Kimball",
+      "Data Vault",
+      "Medallion Architecture",
+      "DAMA-DMBOK"
+    ],
+    "description": "Torre de ingeniería de datos, analytics, BI y gobierno de datos empresariales"
+  },
+  {
+    "id": "4",
+    "team_name": "IA",
+    "tower": "Torre IA",
+    "skills": [
+      "Machine Learning",
+      "Deep Learning",
+      "Procesamiento de lenguaje natural (NLP)",
+      "Visión por computadora",
+      "Desarrollo de agentes inteligentes",
+      "MLOps",
+      "Análisis predictivo",
+      "IA generativa"
+    ],
+    "team_lead": "Angie T. Peña Peña",
+    "team_lead_email": "angiepena@cbit-online.com",
+    "expertise_areas": [
+      "Artificial Intelligence",
+      "Machine Learning",
+      "Natural Language Processing",
+      "Computer Vision",
+      "Generative AI",
+      "MLOps"
+    ],
+    "technologies": [
+      "Python",
+      "TensorFlow",
+      "PyTorch",
+      "Scikit-learn",
+      "Azure OpenAI",
+      "OpenAI API",
+      "Hugging Face",
+      "LangChain",
+      "Azure ML",
+      "AWS SageMaker",
+      "Vertex AI",
+      "MLflow",
+      "Jupyter"
+    ],
+    "frameworks": [
+      "Transformers",
+      "LangChain",
+      "Semantic Kernel",
+      "AutoML",
+      "RAG Architecture"
+    ],
+    "description": "Torre de inteligencia artificial, machine learning, NLP y soluciones de IA generativa"
+  },
+  {
+    "id": "5",
+    "team_name": "RPA",
+    "tower": "Torre RPA",
+    "skills": [
+      "Automatización robótica de procesos",
+      "Diseño de flujos automatizados",
+      "Análisis de procesos",
+      "Desarrollo de bots",
+      "Integración de sistemas legacy",
+      "Orquestación de robots",
+      "Procesamiento inteligente de documentos"
+    ],
+    "team_lead": "Alberto M. Mendoza Fontalvo",
+    "team_lead_email": "albertomendoza@periferia-it.com",
+    "expertise_areas": [
+      "Robotic Process Automation",
+      "Process Mining",
+      "Intelligent Automation",
+      "Document Processing",
+      "Bot Development"
+    ],
+    "technologies": [
+      "UiPath",
+      "Automation Anywhere",
+      "Blue Prism",
+      "Power Automate",
+      "Azure Logic Apps",
+      "ABBYY",
+      "Celonis",
+      "Python",
+      "VBA"
+    ],
+    "frameworks": [
+      "UiPath REFramework",
+      "RPA CoE Model",
+      "Automation First"
+    ],
+    "description": "Torre de automatización robótica de procesos, bots y automatización inteligente de documentos"
+  },
+  {
+    "id": "6",
+    "team_name": "FULLSTACK",
+    "tower": "Torre FULLSTACK",
+    "skills": [
+      "Desarrollo frontend",
+      "Desarrollo backend",
+      "Desarrollo de APIs REST/GraphQL",
+      "Arquitectura de aplicaciones web",
+      "Diseño de bases de datos",
+      "Integración de sistemas",
+      "Testing y QA de software"
+    ],
+    "team_lead": "Jhon E. Perez Yepez",
+    "team_lead_email": "jhonperez@cbit-online.com",
+    "expertise_areas": [
+      "Full Stack Development",
+      "Frontend Development",
+      "Backend Development",
+      "Web Applications",
+      "API Development",
+      "Microservices"
+    ],
+    "technologies": [
+      "JavaScript",
+      "TypeScript",
+      "React",
+      "Angular",
+      "Vue.js",
+      "Node.js",
+      ".NET",
+      "Java",
+      "Python",
+      "SQL Server",
+      "PostgreSQL",
+      "MongoDB",
+      "Redis",
+      "Docker"
+    ],
+    "frameworks": [
+      "React",
+      "Angular",
+      "Next.js",
+      "Express.js",
+      "NestJS",
+      "ASP.NET Core",
+      "Spring Boot"
+    ],
+    "description": "Torre de desarrollo fullstack, aplicaciones web modernas, APIs y microservicios"
+  },
+  {
+    "id": "7",
+    "team_name": "QA",
+    "tower": "Torre Quality Assurance",
+    "skills": [
+      "Testing manual y automatizado",
+      "Diseño de casos de prueba",
+      "Pruebas de rendimiento",
+      "Pruebas de seguridad",
+      "Pruebas de integración",
+      "Automatización de pruebas",
+      "Gestión de defectos",
+      "Calidad de software"
+    ],
+    "team_lead": "Yeraldin Useche",
+    "team_lead_email": "yeraldinuseche@cbit-online.com",
+    "expertise_areas": [
+      "Quality Assurance",
+      "Test Automation",
+      "Performance Testing",
+      "Security Testing",
+      "Manual Testing",
+      "Test Management"
+    ],
+    "technologies": [
+      "Selenium",
+      "Cypress",
+      "Playwright",
+      "JMeter",
+      "Postman",
+      "SoapUI",
+      "TestNG",
+      "JUnit",
+      "Azure Test Plans",
+      "Jira",
+      "Zephyr",
+      "Appium"
+    ],
+    "frameworks": [
+      "BDD (Cucumber)",
+      "TDD",
+      "Page Object Model",
+      "ISTQB",
+      "Agile Testing"
+    ],
+    "description": "Torre de aseguramiento de calidad, testing manual y automatizado, pruebas de rendimiento y seguridad"
   },
   {
     "id": "8",
@@ -331,7 +340,7 @@
       "Integración con APIs y servicios backend"
     ],
     "team_lead": "Jorge Vidal",
-    "team_lead_email": "correo@prueba.com",
+    "team_lead_email": "jorgevidal@cbit-online.com",
     "expertise_areas": [
       "Mobile Development",
       "iOS Development",
@@ -376,7 +385,7 @@
       "Soporte funcional SAP"
     ],
     "team_lead": "Luis Minaya Obregon",
-    "team_lead_email": "correo@prueba.com",
+    "team_lead_email": "luisminaya@periferia-it.pe",
     "expertise_areas": [
       "SAP ERP",
       "SAP S/4HANA",
@@ -422,7 +431,7 @@
       "Orquestación de servicios"
     ],
     "team_lead": "Luis E. Ospina Usaquen",
-    "team_lead_email": "correo@prueba.com",
+    "team_lead_email": "luisospina@cbit-online.com",
     "expertise_areas": [
       "Enterprise Integration",
       "API Management",
@@ -468,7 +477,7 @@
       "Experiencia de usuario web"
     ],
     "team_lead": "John E. Goyeneche Barbosa",
-    "team_lead_email": "correo@prueba.com",
+    "team_lead_email": "johnbarbosa@cbit-online.com",
     "expertise_areas": [
       "Portal Development",
       "CMS",
@@ -512,7 +521,7 @@
       "Documentación técnica"
     ],
     "team_lead": "Victor A. Romero Alvarez",
-    "team_lead_email": "correo@prueba.com",
+    "team_lead_email": "victorromero@periferia-it.com",
     "expertise_areas": [
       "IT Support",
       "Application Maintenance",
@@ -552,7 +561,7 @@
       "Gestión de configuración"
     ],
     "team_lead": "Juan C. Aguilar Muñoz",
-    "team_lead_email": "correo@prueba.com",
+    "team_lead_email": "juanaguilar@cbit-online.com",
     "expertise_areas": [
       "DevOps",
       "CI/CD",

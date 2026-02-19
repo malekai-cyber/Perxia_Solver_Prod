@@ -19,6 +19,7 @@ Response:
 }
 """
 
+from shared.core.orchestrator import OpportunityOrchestrator
 import os
 import sys
 import json
@@ -29,13 +30,13 @@ import azure.functions as func
 # Agregar shared al path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from shared.core.orchestrator import OpportunityOrchestrator
 
 logging.basicConfig(level=logging.INFO)
 
 
 class DateTimeEncoder(json.JSONEncoder):
     """JSON encoder que maneja datetime objects"""
+
     def default(self, obj):
         if isinstance(obj, (datetime, date)):
             return obj.isoformat()
@@ -45,26 +46,30 @@ class DateTimeEncoder(json.JSONEncoder):
 async def main(req: func.HttpRequest) -> func.HttpResponse:
     """
     HTTP Trigger principal para análisis de oportunidades.
-    
+
     Flujo:
     1. Power Automate detecta nueva oportunidad en Dataverse
     2. Power Automate envía HTTP POST con el body de la oportunidad
-    3. Esta función procesa los datos con IA (DeepSeek-R1)
+    3. Esta función procesa los datos con IA (GPT-4o-mini)
     4. Retorna análisis con Adaptive Card para Teams
-    
+
     Payload esperado:
     {
-        "opportunityid": "guid",
-        "name": "Nombre de la oportunidad",
-        "description": "...",
-        "cr807_descripciondelrequerimientofuncional": "...",
-        ... otros campos de Dynamics 365
+        "body": {
+            "opportunityid": "guid",
+            "name": "Nombre de la oportunidad",
+            "description": "...",
+            "cr807_descripciondelrequerimientofuncional": "...",
+            ... otros campos de Dynamics 365
+        },
+        "teams_id": "ID del equipo de Teams",
+        "channel_id": "ID del canal de Teams"
     }
     """
     logging.info("=" * 60)
     logging.info("🚀 AGENTE DE ANÁLISIS INTELIGENTE - Función iniciada")
     logging.info("=" * 60)
-    
+
     try:
         # Validar método
         if req.method != "POST":
@@ -79,7 +84,7 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
                 status_code=405,
                 mimetype="application/json"
             )
-        
+
         # Obtener payload
         try:
             payload = req.get_json()
@@ -96,7 +101,7 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
                 status_code=400,
                 mimetype="application/json"
             )
-        
+
         if not payload:
             return func.HttpResponse(
                 json.dumps({
@@ -109,53 +114,78 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
                 status_code=400,
                 mimetype="application/json"
             )
-        
+
+        # Extraer estructura: body, teams_id, channel_id
+        # Soporta ambos formatos:
+        # 1. Nuevo: { "body": {...}, "teams_id": "...", "channel_id": "..." }
+        # 2. Legacy: { "opportunityid": "...", ... } (todo flat)
+
+        if "body" in payload and isinstance(payload["body"], dict):
+            # Nuevo formato estructurado
+            opportunity_data = payload["body"]
+            teams_id = payload.get("teams_id") or payload.get("teamsId")
+            channel_id = payload.get("channel_id") or payload.get("channelId")
+            logging.info("📦 Payload estructurado detectado (body + teams_id + channel_id)")
+        else:
+            # Formato legacy (flat)
+            opportunity_data = payload
+            teams_id = payload.get("teams_id") or payload.get("teamsId")
+            channel_id = payload.get("channel_id") or payload.get("channelId")
+            logging.info("📦 Payload flat detectado (legacy)")
+
+        # Agregar teams_id y channel_id al opportunity_data para el orquestador
+        opportunity_data["teams_id"] = teams_id
+        opportunity_data["channel_id"] = channel_id
+
         # Validar campos requeridos
-        if "opportunityid" not in payload:
+        if "opportunityid" not in opportunity_data:
             return func.HttpResponse(
                 json.dumps({
                     "success": False,
                     "error": {
                         "code": "MISSING_OPPORTUNITY_ID",
-                        "message": "El payload debe contener 'opportunityid'"
+                        "message": "El payload debe contener 'opportunityid' (dentro de 'body' o directamente)"
                     }
                 }),
                 status_code=400,
                 mimetype="application/json"
             )
-        
-        logging.info(f"📥 Oportunidad recibida: {payload.get('name', 'Sin nombre')}")
-        logging.info(f"📥 ID: {payload.get('opportunityid')}")
-        logging.info(f"📥 Evento: {payload.get('SdkMessage', 'N/A')}")
-        
+
+        logging.info(f"📥 Oportunidad recibida: {opportunity_data.get('name', 'Sin nombre')}")
+        logging.info(f"📥 ID: {opportunity_data.get('opportunityid')}")
+        logging.info(f"📥 Evento: {opportunity_data.get('SdkMessage', 'N/A')}")
+        logging.info(f"📥 Teams ID: {teams_id or 'N/A'}")
+        logging.info(f"📥 Channel ID: {channel_id or 'N/A'}")
+
         # Crear orquestador y procesar
         logging.info("⚙️ Inicializando orquestador...")
         orchestrator = OpportunityOrchestrator()
-        
+
         logging.info("🔄 Procesando oportunidad...")
-        result = await orchestrator.process_opportunity(payload)
-        
+        result = await orchestrator.process_opportunity(opportunity_data)
+
         # Determinar código de respuesta
         status_code = 200 if result.get("success", False) else 500
-        
+
         logging.info("=" * 60)
         if result.get("success"):
             logging.info("✅ PROCESAMIENTO EXITOSO")
         else:
             logging.error("❌ PROCESAMIENTO FALLIDO")
         logging.info("=" * 60)
-        
+
         return func.HttpResponse(
             json.dumps(result, cls=DateTimeEncoder, ensure_ascii=False, indent=2),
             status_code=status_code,
-            mimetype="application/json"
+            mimetype="application/json",
+            charset="utf-8"
         )
-        
+
     except Exception as e:
         logging.error(f"❌ ERROR CRÍTICO: {str(e)}")
         import traceback
         logging.error(f"❌ TRACEBACK: {traceback.format_exc()}")
-        
+
         return func.HttpResponse(
             json.dumps({
                 "success": False,
@@ -169,5 +199,6 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
                 }
             }),
             status_code=500,
-            mimetype="application/json"
+            mimetype="application/json",
+            charset="utf-8"
         )

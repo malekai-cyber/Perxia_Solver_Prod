@@ -5,7 +5,7 @@ Coordina el flujo completo desde la recepción del payload hasta la respuesta
 
 import logging
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from ..models.opportunity import OpportunityPayload
 from ..services.openai_service import OpenAIService
@@ -19,7 +19,7 @@ from ..generators.pdf_generator import PDFGenerator
 class OpportunityOrchestrator:
     """
     Orquestador para el análisis de oportunidades de Dynamics 365.
-    
+
     Flujo:
     1. Recibir payload de Power Automate
     2. Validar y parsear datos de oportunidad
@@ -30,13 +30,13 @@ class OpportunityOrchestrator:
     7. Generar Adaptive Card para Teams
     8. Retornar respuesta estructurada
     """
-    
+
     def __init__(self):
         """Inicializa los servicios necesarios"""
         self.openai_service = OpenAIService()
         self.search_service = SearchService()
         self.blob_service = BlobStorageService()
-        
+
         # Cosmos DB es opcional
         try:
             self.cosmos_service = CosmosDBService()
@@ -45,27 +45,27 @@ class OpportunityOrchestrator:
             logging.warning(f"⚠️ Cosmos DB no configurado: {str(e)}")
             self.cosmos_service = None
             self.cosmos_enabled = False
-        
+
         logging.info("✅ OpportunityOrchestrator inicializado")
-    
+
     async def process_opportunity(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """
         Procesa una oportunidad recibida desde Power Automate
-        
+
         Args:
             payload: Datos de la oportunidad desde Dataverse/Power Automate
-            
+
         Returns:
             Diccionario con el resultado del análisis
         """
         start_time = datetime.utcnow()
-        
+
         try:
             # ========================================
             # PASO 1: Validar y parsear payload
             # ========================================
             logging.info("📥 Paso 1: Validando payload...")
-            
+
             try:
                 opportunity = OpportunityPayload(**payload)
             except Exception as e:
@@ -76,43 +76,43 @@ class OpportunityOrchestrator:
                     payload.get("opportunityid", "unknown"),
                     payload.get("name", "Unknown")
                 )
-            
+
             logging.info(f"✅ Oportunidad validada: {opportunity.name}")
-            
+
             # ========================================
             # PASO 2: Preparar texto para análisis
             # ========================================
             logging.info("📝 Paso 2: Preparando texto para análisis...")
-            
+
             analysis_text = opportunity.format_for_analysis()
             logging.info(f"📝 Texto preparado: {len(analysis_text)} caracteres")
-            
+
             # ========================================
             # PASO 3: Buscar equipos relevantes
             # ========================================
             logging.info("🔍 Paso 3: Buscando equipos relevantes...")
-            
+
             # Usar la descripción limpia como query de búsqueda
             search_query = opportunity.clean_description[:500] if opportunity.clean_description else opportunity.name
-            
+
             teams = self.search_service.search_teams(search_query, top=15)
-            
+
             if not teams:
                 logging.warning("⚠️ No se encontraron equipos, obteniendo todos...")
                 teams = self.search_service.get_all_teams()
-            
+
             logging.info(f"✅ {len(teams)} equipos encontrados")
-            
+
             # ========================================
             # PASO 4: Análisis con IA
             # ========================================
             logging.info("🧠 Paso 4: Analizando con DeepSeek-R1...")
-            
+
             analysis_result = self.openai_service.analyze_opportunity(
                 opportunity_text=analysis_text,
                 available_teams=teams
             )
-            
+
             if not analysis_result:
                 logging.error("❌ El análisis de IA no retornó resultados")
                 return self._error_response(
@@ -121,31 +121,31 @@ class OpportunityOrchestrator:
                     opportunity.opportunityid,
                     opportunity.name
                 )
-            
+
             logging.info("✅ Análisis completado")
-            
+
             # ========================================
             # PASO 5: Procesar torres recomendadas
             # ========================================
             logging.info("🏗️ Paso 5: Procesando torres recomendadas...")
-            
+
             # Normalizar torres del análisis
             required_towers = analysis_result.get("required_towers", [])
             team_recommendations = analysis_result.get("team_recommendations", [])
-            
+
             # Enriquecer con datos de equipos encontrados
             enriched_teams = self._enrich_team_recommendations(team_recommendations, teams)
             analysis_result["team_recommendations"] = enriched_teams
-            
+
             logging.info(f"✅ {len(required_towers)} torres requeridas, {len(enriched_teams)} equipos recomendados")
-            
+
             # ========================================
             # PASO 6: Guardar en Cosmos DB (opcional)
             # ========================================
             cosmos_id = None
             if self.cosmos_enabled and self.cosmos_service:
                 logging.info("💾 Paso 6: Guardando en Cosmos DB...")
-                
+
                 try:
                     record = {
                         "id": f"opp-{opportunity.opportunityid}-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
@@ -156,7 +156,7 @@ class OpportunityOrchestrator:
                         "processed_at": datetime.utcnow().isoformat(),
                         "source": "power_automate"
                     }
-                    
+
                     result = self.cosmos_service.save_analysis(record)
                     cosmos_id = result.get("id") if result else None
                     logging.info(f"✅ Guardado en Cosmos: {cosmos_id}")
@@ -164,12 +164,12 @@ class OpportunityOrchestrator:
                     logging.warning(f"⚠️ Error guardando en Cosmos: {str(e)}")
             else:
                 logging.info("⏭️ Paso 6: Cosmos DB no habilitado, saltando...")
-            
+
             # ========================================
             # PASO 7: Generar PDF
             # ========================================
             logging.info("📄 Paso 7: Generando PDF...")
-            
+
             pdf_url = None
             try:
                 pdf_generator = PDFGenerator()
@@ -182,40 +182,63 @@ class OpportunityOrchestrator:
                         "generated_at": datetime.utcnow().isoformat()
                     }
                 )
-                
+
                 # Subir a Blob Storage
-                blob_name = f"opportunity-analysis/{opportunity.opportunityid}/{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.pdf"
+                ts = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+                blob_name = f"opportunity-analysis/{opportunity.opportunityid}/{ts}.pdf"
                 pdf_url = self.blob_service.upload_pdf(pdf_bytes, blob_name)
                 logging.info(f"✅ PDF subido: {blob_name}")
-                
+
             except Exception as e:
                 logging.warning(f"⚠️ Error generando PDF: {str(e)}")
-            
+
             # ========================================
             # PASO 8: Generar Adaptive Card
             # ========================================
             logging.info("🎨 Paso 8: Generando Adaptive Card...")
-            
+
             adaptive_card = generate_opportunity_card(
                 opportunity_id=opportunity.opportunityid,
                 opportunity_name=opportunity.name,
                 analysis_data=analysis_result,
                 pdf_url=pdf_url
             )
-            
+
             logging.info("✅ Adaptive Card generado")
-            
+
             # ========================================
-            # PASO 9: Construir respuesta
+            # PASO 9: Extraer líderes de torre únicos
+            # ========================================
+            tower_leaders = []
+            seen_leaders = set()
+            for team in enriched_teams:
+                leader = team.get("team_lead", "")
+                email = team.get("team_lead_email", "")
+                tower = team.get("tower", "")
+                team_name = team.get("team_name", "")
+
+                if leader and leader not in seen_leaders:
+                    seen_leaders.add(leader)
+                    tower_leaders.append({
+                        "tower": tower,
+                        "team_name": team_name,
+                        "leader_name": leader,
+                        "leader_email": email
+                    })
+
+            logging.info(f"✅ {len(tower_leaders)} líderes de torre identificados")
+
+            # ========================================
+            # PASO 10: Construir respuesta
             # ========================================
             processing_time = (datetime.utcnow() - start_time).total_seconds()
-            
+
             response = {
                 "success": True,
                 "opportunity_id": opportunity.opportunityid,
                 "opportunity_name": opportunity.name,
                 "event_type": opportunity.event_type,
-                
+
                 "analysis": {
                     "executive_summary": analysis_result.get("executive_summary"),
                     "key_requirements": analysis_result.get("key_requirements", []),
@@ -230,13 +253,13 @@ class OpportunityOrchestrator:
                     "clarification_questions": analysis_result.get("clarification_questions", []),
                     "confidence": analysis_result.get("analysis_confidence", 0.0)
                 },
-                
+
                 "outputs": {
                     "adaptive_card": adaptive_card,
                     "pdf_url": pdf_url,
                     "cosmos_record_id": cosmos_id
                 },
-                
+
                 "metadata": {
                     "processed_at": datetime.utcnow().isoformat(),
                     "processing_time_seconds": round(processing_time, 2),
@@ -244,32 +267,32 @@ class OpportunityOrchestrator:
                     "teams_evaluated": len(teams)
                 }
             }
-            
+
             logging.info(f"✅ Procesamiento completado en {processing_time:.2f}s")
             return response
-            
+
         except Exception as e:
             logging.error(f"❌ Error procesando oportunidad: {str(e)}")
             import traceback
             logging.error(f"❌ Traceback: {traceback.format_exc()}")
-            
+
             return self._error_response(
                 "PROCESSING_ERROR",
                 str(e),
                 payload.get("opportunityid", "unknown"),
                 payload.get("name", "Unknown")
             )
-    
+
     def _enrich_team_recommendations(
-        self, 
-        ai_recommendations: list, 
+        self,
+        ai_recommendations: list,
         search_results: list
     ) -> list:
         """
         Enriquece las recomendaciones de IA con datos reales de los equipos
         """
         enriched = []
-        
+
         # Crear lookup de equipos por nombre/torre
         teams_lookup = {}
         for team in search_results:
@@ -277,17 +300,17 @@ class OpportunityOrchestrator:
             tower = team.get("tower", "").upper()
             teams_lookup[name] = team
             teams_lookup[tower] = team
-        
+
         for rec in ai_recommendations:
             if not isinstance(rec, dict):
                 continue
-            
+
             # Buscar equipo real
             team_name = rec.get("team_name", "").upper()
             tower = rec.get("tower", "").upper()
-            
+
             real_team = teams_lookup.get(team_name) or teams_lookup.get(tower)
-            
+
             if real_team:
                 # Usar datos reales del equipo
                 enriched.append({
@@ -303,13 +326,13 @@ class OpportunityOrchestrator:
             else:
                 # Usar datos de la recomendación de IA
                 enriched.append(rec)
-        
+
         return enriched
-    
+
     def _error_response(
-        self, 
-        code: str, 
-        message: str, 
+        self,
+        code: str,
+        message: str,
         opportunity_id: str,
         opportunity_name: str
     ) -> Dict[str, Any]:

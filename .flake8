@@ -1,0 +1,11 @@
+[flake8]
+max-line-length = 120
+exclude =
+    .venv,
+    __pycache__,
+    .git,
+    *.egg-info
+
+# Las líneas largas dentro del prompt (string literal del LLM) no son controlables
+per-file-ignores =
+    shared/services/openai_service.py:E501

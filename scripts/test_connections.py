@@ -4,7 +4,6 @@ Script de prueba para verificar conexiones a los servicios Azure
 
 import os
 import sys
-from pathlib import Path
 from dotenv import load_dotenv
 
 # Cargar variables de entorno
@@ -59,19 +58,19 @@ print("-" * 60)
 print("\n1️⃣ Azure OpenAI (GPT-4o-mini)...")
 try:
     from openai import AzureOpenAI
-    
+
     client = AzureOpenAI(
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
         api_key=os.getenv("AZURE_OPENAI_KEY"),
         api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-10-21")
     )
-    
+
     response = client.chat.completions.create(
         model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o-mini"),
         messages=[{"role": "user", "content": "Responde solo con 'OK' si puedes leer esto."}],
         max_tokens=10
     )
-    
+
     result = response.choices[0].message.content.strip()
     print(f"   ✅ Respuesta: {result}")
 except Exception as e:
@@ -82,24 +81,24 @@ print("\n2️⃣ Azure AI Search (torres-index)...")
 try:
     from azure.search.documents import SearchClient
     from azure.core.credentials import AzureKeyCredential
-    
+
     search_client = SearchClient(
         endpoint=os.getenv("AZURE_SEARCH_ENDPOINT"),
         index_name=os.getenv("AZURE_SEARCH_INDEX_TEAMS"),
         credential=AzureKeyCredential(os.getenv("AZURE_SEARCH_KEY"))
     )
-    
+
     results = search_client.search(search_text="inteligencia artificial", top=2)
     count = 0
     for result in results:
         count += 1
         print(f"   📌 {result.get('tower')} ({result.get('team_name')})")
-    
+
     if count > 0:
         print(f"   ✅ {count} resultados encontrados")
     else:
         print("   ⚠️ Sin resultados (pero conexión OK)")
-        
+
 except Exception as e:
     print(f"   ❌ Error: {str(e)}")
 
@@ -107,20 +106,20 @@ except Exception as e:
 print("\n3️⃣ Azure Blob Storage...")
 try:
     from azure.storage.blob import BlobServiceClient
-    
+
     blob_service = BlobServiceClient.from_connection_string(
         os.getenv("AZURE_STORAGE_CONNECTION_STRING")
     )
-    
+
     container_name = os.getenv("AZURE_STORAGE_CONTAINER_NAME")
     container_client = blob_service.get_container_client(container_name)
-    
+
     # Verificar que el contenedor existe
     if container_client.exists():
         print(f"   ✅ Contenedor '{container_name}' accesible")
     else:
         print(f"   ⚠️ Contenedor '{container_name}' no existe")
-        
+
 except Exception as e:
     print(f"   ❌ Error: {str(e)}")
 
@@ -128,19 +127,19 @@ except Exception as e:
 print("\n4️⃣ Cosmos DB...")
 try:
     from azure.cosmos import CosmosClient
-    
+
     cosmos_client = CosmosClient(
         url=os.getenv("COSMOS_ENDPOINT"),
         credential=os.getenv("COSMOS_KEY")
     )
-    
+
     database = cosmos_client.get_database_client(os.getenv("COSMOS_DATABASE_NAME"))
     container = database.get_container_client(os.getenv("COSMOS_CONTAINER_NAME"))
-    
+
     # Verificar acceso
     container.read()
-    print(f"   ✅ Base de datos y contenedor accesibles")
-    
+    print("   ✅ Base de datos y contenedor accesibles")
+
 except Exception as e:
     print(f"   ❌ Error: {str(e)}")
 

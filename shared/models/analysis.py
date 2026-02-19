@@ -42,42 +42,42 @@ class TimelinePhase(BaseModel):
 
 class OpportunityAnalysis(BaseModel):
     """Análisis completo de una oportunidad"""
-    
+
     # Identificación
     opportunity_id: str = Field(..., description="ID de la oportunidad")
     opportunity_name: str = Field(..., description="Nombre de la oportunidad")
-    
+
     # Resumen ejecutivo
     executive_summary: str = Field(..., description="Resumen ejecutivo del análisis")
-    
+
     # Análisis técnico
     technologies_identified: List[str] = Field(default_factory=list, description="Tecnologías identificadas")
     skills_required: List[str] = Field(default_factory=list, description="Skills requeridos")
-    
+
     # Recomendaciones de equipos
     recommended_teams: List[TeamRecommendation] = Field(
-        default_factory=list, 
+        default_factory=list,
         description="Equipos recomendados ordenados por relevancia"
     )
-    
+
     # Evaluación de riesgos
     risk_assessment: Optional[RiskAssessment] = Field(None, description="Evaluación de riesgos")
-    
+
     # Estimación
     budget_estimate: Optional[BudgetEstimate] = Field(None, description="Estimación de esfuerzo")
-    
+
     # Timeline sugerido
     timeline_phases: List[TimelinePhase] = Field(default_factory=list, description="Fases del proyecto")
-    
+
     # Recomendaciones adicionales
     recommendations: List[str] = Field(default_factory=list, description="Recomendaciones adicionales")
-    
+
     # Preguntas pendientes
     clarification_questions: List[str] = Field(
-        default_factory=list, 
+        default_factory=list,
         description="Preguntas que necesitan clarificación"
     )
-    
+
     # Metadata
     analysis_timestamp: str = Field(..., description="Timestamp del análisis")
     model_used: str = Field(default="GPT-4o-mini", description="Modelo de IA usado")
@@ -91,7 +91,7 @@ class AnalysisResponse(BaseModel):
     adaptive_card: Optional[Dict] = Field(None, description="Adaptive Card para Teams")
     pdf_url: Optional[str] = Field(None, description="URL del PDF generado")
     error: Optional[str] = Field(None, description="Mensaje de error si falló")
-    
+
     # Metadata
     opportunity_id: str = Field(..., description="ID de la oportunidad procesada")
     opportunity_name: str = Field(..., description="Nombre de la oportunidad")
