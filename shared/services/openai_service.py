@@ -87,13 +87,13 @@ Analiza la oportunidad siguiendo este formato JSON EXACTO:
 
   "team_recommendations": [
     {{
-      "tower": "Torre NOMBRE",
-      "team_name": "NOMBRE",
-      "team_lead": "Nombre del líder",
-      "team_lead_email": "email@ejemplo.com",
+      "tower": "(COPIAR EXACTAMENTE la torre del equipo de la lista)",
+      "team_name": "(COPIAR EXACTAMENTE el nombre del equipo de la lista)",
+      "team_lead": "(COPIAR EXACTAMENTE el líder del equipo de la lista)",
+      "team_lead_email": "(COPIAR EXACTAMENTE el email del equipo de la lista)",
       "relevance_score": 0.85,
       "matched_skills": ["skill1", "skill2"],
-      "justification": "Por qué este equipo es necesario para esta oportunidad",
+      "justification": "Por qué este equipo es necesario",
       "estimated_involvement": "Full-time / Part-time / Consultoría"
     }}
   ],
@@ -167,11 +167,12 @@ Analiza la oportunidad siguiendo este formato JSON EXACTO:
 REGLAS IMPORTANTES:
 1. Responde SOLO con el JSON, sin texto adicional antes o después
 2. Para "required_towers", USA EXACTAMENTE los nombres de torre de la lista de equipos disponibles (ejemplo: "Torre IA", "Torre DATA")
-3. Para cada equipo recomendado, COPIA EXACTAMENTE: team_lead, team_lead_email del equipo correspondiente
-4. Sé realista con las estimaciones basándote en la complejidad descrita
-5. Identifica riesgos reales y mitigaciones prácticas
-6. Las preguntas de clarificación deben ayudar a refinar la propuesta
-7. El equipo de QA (Torre Quality Assurance) y PMO (Torre PMO) son OBLIGATORIOS en proyectos medianos/grandes
+3. Para cada equipo recomendado, COPIA EXACTAMENTE: tower, team_name, team_lead y team_lead_email del equipo correspondiente de la lista de EQUIPOS/TORRES DISPONIBLES. NUNCA inventes nombres de líder ni emails.
+4. Si un equipo no aparece en la lista de EQUIPOS/TORRES DISPONIBLES arriba, NO lo incluyas en las recomendaciones
+5. Sé realista con las estimaciones basándote en la complejidad descrita
+6. Identifica riesgos reales y mitigaciones prácticas
+7. Las preguntas de clarificación deben ayudar a refinar la propuesta
+8. El equipo de QA (Torre Quality Assurance) y PMO (Torre PMO) son OBLIGATORIOS en proyectos medianos/grandes — búscalos en la lista de equipos disponibles
 """
 
             response = self.client.chat.completions.create(

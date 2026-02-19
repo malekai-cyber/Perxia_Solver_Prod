@@ -115,25 +115,25 @@ class OpportunityOrchestrator:
 
             # Validar que el servicio de búsqueda esté disponible
             if not getattr(self, "search_service", None):
-                logging.warning("⚠️ SearchService no configurado: no se podrán obtener equipos desde Azure Search")
+                logging.warning(
+                    "⚠️ SearchService no configurado: "
+                    "no se podrán obtener equipos desde Azure Search"
+                )
                 teams = []
+                all_teams = []
             else:
-                # Usar la descripción limpia como query de búsqueda
-                desc = opportunity.clean_description
-                search_query = desc[:500] if desc else opportunity.name
-                teams = self.search_service.search_teams(search_query, top=15)
+                # Obtener TODOS los equipos (dataset pequeño ~10)
+                # para que la IA tenga contexto completo y el
+                # enriquecimiento siempre encuentre datos reales.
+                try:
+                    all_teams = self.search_service.get_all_teams()
+                except Exception as e:
+                    logging.warning(
+                        f"⚠️ Error obteniendo todos los equipos: {e}"
+                    )
+                    all_teams = []
 
-            if not teams:
-                logging.warning("⚠️ No se encontraron equipos")
-                if getattr(self, "search_service", None):
-                    logging.info("📥 Obteniendo todos los equipos desde SearchService...")
-                    try:
-                        teams = self.search_service.get_all_teams()
-                    except Exception as e:
-                        logging.warning(f"⚠️ Error obteniendo todos los equipos: {str(e)}")
-                        teams = []
-                else:
-                    logging.warning("⚠️ SearchService no disponible, se continuará con lista de equipos vacía")
+                teams = all_teams  # pasar todos a la IA
 
             logging.info(f"✅ {len(teams)} equipos encontrados")
 
@@ -182,7 +182,11 @@ class OpportunityOrchestrator:
             team_recommendations = analysis_result.get("team_recommendations", [])
 
             # Enriquecer con datos de equipos encontrados
-            enriched_teams = self._enrich_team_recommendations(team_recommendations, teams)
+            # Usar all_teams (completo) para el enriquecimiento
+            enriched_teams = self._enrich_team_recommendations(
+                team_recommendations,
+                all_teams,
+            )
             analysis_result["team_recommendations"] = enriched_teams
 
             logging.info(f"✅ {len(required_towers)} torres requeridas, {len(enriched_teams)} equipos recomendados")
@@ -339,42 +343,84 @@ class OpportunityOrchestrator:
         search_results: list
     ) -> list:
         """
-        Enriquece las recomendaciones de IA con datos reales de los equipos
+        Enriquece las recomendaciones de IA con datos reales de los equipos.
+
+        Genera múltiples claves de búsqueda por equipo para tolerar
+        variaciones de nombre (ej. "QA" vs "QUALITY ASSURANCE").
         """
         enriched = []
 
-        # Crear lookup de equipos por nombre/torre
-        teams_lookup = {}
+        # ----------------------------------------------------------
+        # Crear lookup robusto: varias claves apuntan al mismo team
+        # ----------------------------------------------------------
+        teams_lookup: dict = {}
         for team in search_results:
-            name = team.get("name", "").upper()
-            tower = team.get("tower", "").upper()
-            teams_lookup[name] = team
-            teams_lookup[tower] = team
+            name = (team.get("name") or "").strip().upper()
+            tower = (team.get("tower") or "").strip().upper()
+
+            # Clave directa por nombre y torre
+            if name:
+                teams_lookup[name] = team
+            if tower:
+                teams_lookup[tower] = team
+
+            # Clave sin prefijo "TORRE " para tolerar "QA" ↔
+            # "TORRE QUALITY ASSURANCE"
+            tower_clean = tower.replace("TORRE ", "").strip()
+            if tower_clean:
+                teams_lookup[tower_clean] = team
+
+            # Palabras clave del nombre ("QUALITY ASSURANCE" → QA
+            # ya cubierto, pero al revés: "QA" equipo puede mapearse
+            # buscando por torre_clean)
 
         for rec in ai_recommendations:
             if not isinstance(rec, dict):
                 continue
 
-            # Buscar equipo real
-            team_name = rec.get("team_name", "").upper()
-            tower = rec.get("tower", "").upper()
+            # Buscar equipo real con múltiples estrategias
+            team_name = (rec.get("team_name") or "").strip().upper()
+            tower = (rec.get("tower") or "").strip().upper()
+            tower_clean = tower.replace("TORRE ", "").strip()
 
-            real_team = teams_lookup.get(team_name) or teams_lookup.get(tower)
+            real_team = (
+                teams_lookup.get(team_name)
+                or teams_lookup.get(tower)
+                or teams_lookup.get(tower_clean)
+            )
 
             if real_team:
                 # Usar datos reales del equipo
                 enriched.append({
                     "tower": real_team.get("tower", rec.get("tower")),
-                    "team_name": real_team.get("name", rec.get("team_name")),
-                    "team_lead": real_team.get("leader", rec.get("team_lead", "")),
-                    "team_lead_email": real_team.get("leader_email", rec.get("team_lead_email", "")),
-                    "relevance_score": rec.get("relevance_score", 0.8),
-                    "matched_skills": rec.get("matched_skills", []),
+                    "team_name": real_team.get(
+                        "name", rec.get("team_name")
+                    ),
+                    "team_lead": real_team.get(
+                        "leader", rec.get("team_lead", "")
+                    ),
+                    "team_lead_email": real_team.get(
+                        "leader_email",
+                        rec.get("team_lead_email", "")
+                    ),
+                    "relevance_score": rec.get(
+                        "relevance_score", 0.8
+                    ),
+                    "matched_skills": rec.get(
+                        "matched_skills", []
+                    ),
                     "justification": rec.get("justification", ""),
-                    "estimated_involvement": rec.get("estimated_involvement", "")
+                    "estimated_involvement": rec.get(
+                        "estimated_involvement", ""
+                    ),
                 })
             else:
-                # Usar datos de la recomendación de IA
+                logging.warning(
+                    f"⚠️ Equipo '{rec.get('team_name')}' "
+                    f"(torre '{rec.get('tower')}') no encontrado "
+                    "en la base de conocimiento — "
+                    "se usará la info generada por IA"
+                )
                 enriched.append(rec)
 
         return enriched
