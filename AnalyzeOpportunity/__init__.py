@@ -19,7 +19,6 @@ Response:
 }
 """
 
-from shared.core.orchestrator import OpportunityOrchestrator
 import os
 import sys
 import json
@@ -30,17 +29,18 @@ import azure.functions as func
 # Agregar shared al path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-
 logging.basicConfig(level=logging.INFO, force=True)
 
 
 class DateTimeEncoder(json.JSONEncoder):
     """JSON encoder que maneja datetime objects"""
-
     def default(self, obj):
-        if isinstance(obj, (datetime, date)):
-            return obj.isoformat()
-        return super().default(obj)
+        try:
+            if isinstance(obj, (datetime, date)):
+                return obj.isoformat()
+            return super().default(obj)
+        except Exception:
+            return str(obj)
 
 
 async def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -66,6 +66,8 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
     """
     logging.info("=" * 60)
     logging.info("🚀 AGENTE DE ANÁLISIS INTELIGENTE - Función iniciada")
+    logging.info(f"📍 Python version: {sys.version}")
+    logging.info(f"📍 sys.path: {sys.path[:3]}")
     logging.info("=" * 60)
 
     try:
@@ -155,11 +157,34 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
         logging.info(f"📥 Teams ID: {teams_id or 'N/A'}")
         logging.info(f"📥 Channel ID: {channel_id or 'N/A'}")
 
-        # Crear orquestador y procesar
-        logging.info("⚙️ Inicializando orquestador...")
-        orchestrator = OpportunityOrchestrator()
+        # Importar orquestador de forma perezosa para evitar fallos en tiempo de carga
+        logging.info("⚙️ Inicializando orquestador (import perezoso)...")
+        try:
+            from shared.core.orchestrator import OpportunityOrchestrator
+            logging.info("✅ OpportunityOrchestrator importado exitosamente")
+        except Exception as e:
+            logging.error(f"❌ Error importando OpportunityOrchestrator: {str(e)}")
+            import traceback
+            tb = traceback.format_exc()
+            logging.error(f"❌ Traceback completo:\n{tb}")
+            return func.HttpResponse(
+                json.dumps({
+                    "success": False,
+                    "error": {
+                        "code": "IMPORT_ERROR",
+                        "message": f"Error cargando componentes del servicio: {str(e)}",
+                        "traceback": tb.splitlines()[-20:]
+                    },
+                    "retry_suggested": False,
+                    "metadata": {"processed_at": datetime.utcnow().isoformat()}
+                }),
+                status_code=200,
+                mimetype="application/json",
+                charset="utf-8"
+            )
 
         logging.info("🔄 Procesando oportunidad...")
+        orchestrator = OpportunityOrchestrator()
         result = await orchestrator.process_opportunity(opportunity_data)
 
         # Determinar código de respuesta
