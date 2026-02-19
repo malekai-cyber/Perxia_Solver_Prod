@@ -1,8 +1,0 @@
-{
-    "opportunityid": "test-prod-003",
-    "name": "Proyecto de Plataforma IA con ML y Data Pipeline",
-    "opportunity_description": "Desarrollo de plataforma de inteligencia artificial con modelos de machine learning avanzados y pipeline de procesamiento de datos en tiempo real. Se requiere integración con sistemas cloud Azure.",
-    "torres_needed": ["IA", "DATA", "DEVOPS"],
-    "priority": "high",
-    "expected_start_date": "2024-03-01"
-}
