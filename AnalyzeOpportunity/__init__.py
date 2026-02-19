@@ -31,7 +31,7 @@ import azure.functions as func
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, force=True)
 
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -55,16 +55,14 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
 
     Payload esperado:
     {
-        "body": {
-            "opportunityid": "guid",
-            "name": "Nombre de la oportunidad",
-            "description": "...",
-            "cr807_descripciondelrequerimientofuncional": "...",
-            ... otros campos de Dynamics 365
-        },
-        "teams_id": "ID del equipo de Teams",
-        "channel_id": "ID del canal de Teams"
-    }
+        "opportunityid": "guid",
+        "name": "Nombre de la oportunidad",
+        "description": "...",
+        "cr807_descripciondelrequerimientofuncional": "...",
+        ... otros campos de Dynamics 365
+    },
+    "teams_id": "ID del equipo de Teams",
+    "channel_id": "ID del canal de Teams"
     """
     logging.info("=" * 60)
     logging.info("🚀 AGENTE DE ANÁLISIS INTELIGENTE - Función iniciada")
@@ -198,21 +196,25 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as e:
         logging.error(f"❌ ERROR CRÍTICO: {str(e)}")
         import traceback
-        logging.error(f"❌ TRACEBACK: {traceback.format_exc()}")
+        tb = traceback.format_exc()
+        logging.error(f"❌ TRACEBACK: {tb}")
 
+        # Devuelve 200 con el traceback en el cuerpo para facilitar depuración en producción.
+        # Nota: parche temporal — eliminar antes de exponer públicamente.
         return func.HttpResponse(
             json.dumps({
                 "success": False,
                 "error": {
                     "code": "INTERNAL_ERROR",
                     "message": str(e),
-                    "type": type(e).__name__
+                    "type": type(e).__name__,
+                    "traceback": tb.splitlines()[-20:]
                 },
                 "metadata": {
                     "processed_at": datetime.utcnow().isoformat()
                 }
             }),
-            status_code=500,
+            status_code=200,
             mimetype="application/json",
             charset="utf-8"
         )
