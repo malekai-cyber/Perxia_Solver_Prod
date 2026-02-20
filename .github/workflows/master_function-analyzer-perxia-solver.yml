@@ -29,7 +29,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Instalar dependencias
+      - name: Instalar dependencias (build + test)
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
@@ -42,12 +42,23 @@ jobs:
         run: python -m pytest tests/ -q --tb=short
         continue-on-error: true   # no bloquear deploy si tests fallan temporalmente
 
+      - name: Instalar dependencias en .python_packages (bundle para Azure)
+        # Azure Functions Python busca paquetes en .python_packages/lib/site-packages
+        # Este método garantiza que los paquetes estén disponibles sin depender
+        # del build remoto Kudu/Oryx (que puede no ejecutarse con publish profile)
+        run: |
+          pip install \
+            --target=".python_packages/lib/site-packages" \
+            --upgrade \
+            -r requirements.txt
+
       - name: Empaquetar artefacto de despliegue
-        # Solo incluye lo necesario para Azure Functions (no tests, scripts, .venv, etc.)
+        # Incluye código + paquetes bundleados (.python_packages)
         run: |
           mkdir -p package
           cp -r AnalyzeOpportunity package/
           cp -r shared package/
+          cp -r .python_packages package/
           cp host.json package/
           cp requirements.txt package/
           cd package && zip -r ../release.zip . && cd ..
@@ -81,4 +92,4 @@ jobs:
           app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
           package: release.zip
           publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
-          scm-do-build-during-deployment: true
+          scm-do-build-during-deployment: false
