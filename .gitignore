@@ -54,3 +54,15 @@ Thumbs.db
 # Test/dev artifacts
 .pytest_cache/
 index_creation.log
+test_quick.json
+tq.json
+
+# Azurite local storage emulator
+__azurite_db_blob_extent__.json
+__azurite_db_blob__.json
+__azurite_db_queue_extent__.json
+__azurite_db_queue__.json
+__azurite_db_table_extent__.json
+__azurite_db_table__.json
+__blobstorage__/
+__queuestorage__/
