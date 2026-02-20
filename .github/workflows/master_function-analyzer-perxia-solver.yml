@@ -42,23 +42,14 @@ jobs:
         run: python -m pytest tests/ -q --tb=short
         continue-on-error: true   # no bloquear deploy si tests fallan temporalmente
 
-      - name: Instalar dependencias en .python_packages (bundle para Azure)
-        # Azure Functions Python busca paquetes en .python_packages/lib/site-packages
-        # Este método garantiza que los paquetes estén disponibles sin depender
-        # del build remoto Kudu/Oryx (que puede no ejecutarse con publish profile)
-        run: |
-          pip install \
-            --target=".python_packages/lib/site-packages" \
-            --upgrade \
-            -r requirements.txt
-
       - name: Empaquetar artefacto de despliegue
-        # Incluye código + paquetes bundleados (.python_packages)
+        # NO se incluyen site-packages: Azure Kudu/Oryx instala las dependencias
+        # en su propio entorno Linux al recibir el ZIP (scm-do-build-during-deployment).
+        # Esto garantiza compatibilidad de extensiones nativas (.so) como pydantic-core.
         run: |
           mkdir -p package
           cp -r AnalyzeOpportunity package/
           cp -r shared package/
-          cp -r .python_packages package/
           cp host.json package/
           cp requirements.txt package/
           cd package && zip -r ../release.zip . && cd ..
@@ -92,4 +83,4 @@ jobs:
           app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
           package: release.zip
           publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
-          scm-do-build-during-deployment: false
+          scm-do-build-during-deployment: true   # Oryx instala deps nativas en Azure
